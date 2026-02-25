@@ -134,6 +134,8 @@ Acesse: http://localhost:3000
 
 ## Resumo Rapido de Comandos
 
+### Processamento
+
 | Acao | Comando |
 |------|---------|
 | Transcrever videos | `uv run python transcribe.py` |
@@ -142,4 +144,47 @@ Acesse: http://localhost:3000
 | Gerar perfis | `uv run python profiles.py` |
 | Regenerar perfis | `uv run python profiles.py --force` |
 | Rodar tudo + servidor | `uv run python agent.py` |
-| Commitar | `git add . && git commit -m "mensagem" && git push` |
+
+### Git — Commitar e Subir pro Render
+
+```bash
+# Ver o que mudou
+git status
+
+# Adicionar arquivos especificos
+git add "videos/Nome do Creator/"
+git add youtube_urls.txt
+
+# Ou adicionar tudo de uma vez
+git add .
+
+# Commitar com mensagem descritiva
+git commit -m "feat: descricao do que foi feito"
+
+# Subir pro GitHub (Render faz auto-deploy)
+git push
+```
+
+### Exemplos de Commit por Situacao
+
+```bash
+# Novo creator
+git add "videos/Pamela Magalhaes/"
+git commit -m "feat: adicionar creator Pamela Magalhaes"
+git push
+
+# Novos videos de creator existente
+git add "videos/Fernando Freitas/"
+git commit -m "feat: novos videos de Fernando Freitas"
+git push
+
+# Novos videos do YouTube
+git add youtube_urls.txt
+git commit -m "feat: adicionar videos YouTube sobre narcisismo"
+git push
+
+# Varias mudancas de uma vez
+git add .
+git commit -m "feat: novo creator + videos YouTube"
+git push
+```
