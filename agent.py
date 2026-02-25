@@ -151,7 +151,12 @@ agent_os = AgentOS(
     id="copywriter",
     description="CopyWriter Master — Agente de roteiros e copies",
     agents=[agent],
-    cors_allowed_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    cors_allowed_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://*.lovable.app",
+        "https://*.lovableproject.com",
+    ],
 )
 
 app = agent_os.get_app()
