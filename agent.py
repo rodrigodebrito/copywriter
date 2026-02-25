@@ -173,6 +173,63 @@ app.build_middleware_stack()
 
 
 # ============================================================
+# STARTUP — Re-ingere dados no ChromaDB quando o servidor inicia
+# ============================================================
+# No Render free (sem disco persistente), o ChromaDB começa vazio.
+# Este evento re-ingere os JSONs das transcricoes, YouTube e perfis
+# que ja existem no repositorio, garantindo que a base funcione.
+
+import json as _json
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(application):
+    """Popula o ChromaDB no startup a partir dos JSONs existentes."""
+    print("\n=== STARTUP: Populando ChromaDB ===\n")
+
+    # 1) Transcricoes dos creators (JSONs em videos/*/)
+    if VIDEOS_DIR.exists():
+        for autor_dir in sorted(p for p in VIDEOS_DIR.iterdir() if p.is_dir()):
+            autor = autor_dir.name
+            for json_path in sorted(autor_dir.glob("*.json")):
+                dados = _json.loads(json_path.read_text(encoding="utf-8"))
+                texto = dados.get("transcricao", "")
+                if texto.strip():
+                    knowledge_base.add_content(
+                        text_content=texto,
+                        name=f"{autor} - {json_path.stem}",
+                        metadata={
+                            "tipo": "transcricao",
+                            "autor": autor,
+                            "arquivo": json_path.name,
+                        },
+                        skip_if_exists=True,
+                    )
+            print(f"  [transcricoes] {autor}: OK")
+
+    # 2) YouTube — baixa transcricoes das URLs e ingere
+    try:
+        from youtube_ingest import main as ingerir_youtube
+        ingerir_youtube()
+        print(f"  [youtube]: OK")
+    except Exception as e:
+        print(f"  [youtube]: ERRO - {e}")
+
+    # 3) Perfis de creators — gera a partir das transcricoes
+    try:
+        from profiles import main as gerar_perfis
+        gerar_perfis()
+        print(f"  [perfis]: OK")
+    except Exception as e:
+        print(f"  [perfis]: ERRO - {e}")
+
+    print("\n=== STARTUP: ChromaDB pronto ===\n")
+    yield
+
+app.router.lifespan_context = lifespan
+
+
+# ============================================================
 # INGESTAO — Processa videos, apostilas e YouTube antes de servir
 # ============================================================
 
