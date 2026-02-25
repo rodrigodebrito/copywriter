@@ -156,6 +156,26 @@ agent_os = AgentOS(
 
 app = agent_os.get_app()
 
+
+# ============================================================
+# ENDPOINT CUSTOM — Lista de creators disponiveis
+# ============================================================
+@app.get("/creators")
+def listar_creators():
+    """Retorna a lista de creators com nome e descricao do estilo."""
+    profiles_dir = DB_DIR / "profiles"
+    creators = []
+    for autor in autores_disponiveis:
+        descricao = ""
+        perfil_path = profiles_dir / f"{autor}.json"
+        if perfil_path.exists():
+            import json as _j
+            perfil = _j.loads(perfil_path.read_text(encoding="utf-8"))
+            descricao = perfil.get("resumo_estilo", "")
+        creators.append({"name": autor, "description": descricao})
+    return creators
+
+
 # CORS manual — o AgentOS seta allow_credentials=True que bloqueia "*"
 from starlette.middleware.cors import CORSMiddleware
 
