@@ -1344,9 +1344,12 @@ uv sync                          <span class="cm"># Instala tudo do pyproject.to
     transcrever()               <span class="cm"># Transcreve videos novos</span>
 
     from ingest import ingerir_apostilas
-    ingerir_apostilas()          <span class="cm"># Ingere PDFs novos</span>
+    ingerir_apostilas()         <span class="cm"># Ingere PDFs novos</span>
 
-    agent_os.serve(app="agent:app", reload=True)</code></pre>
+    from youtube_ingest import main as ingerir_youtube
+    ingerir_youtube()           <span class="cm"># Ingere transcricoes de YouTube</span>
+
+    agent_os.serve(app="agent:app", host="0.0.0.0", port=7777, reload=True)</code></pre>
 
         <p>Para adicionar um creator novo, basta criar a pasta em <code>videos/</code> com os MP4s e reiniciar o agente.</p>
     </div>
@@ -1409,7 +1412,7 @@ INSTRUCTIONS = f"""{prompt_base}
         <div class="info-box">
             <strong>Usuario diz "ola"</strong> → Agente se apresenta e pergunta o assunto<br>
             <strong>Usuario diz "autoestima"</strong> → Agente pesquisa base + Tavily, mostra relatorio<br>
-            <strong>Agente recomenda creator</strong> → Baseado em quem fala sobre o tema<br>
+            <strong>Agente lista creators disponiveis</strong> → Usuario escolhe qual estilo clonar<br>
             <strong>Usuario escolhe</strong> → Agente gera 10 hooks no estilo do creator<br>
             <strong>Usuario aprova hook</strong> → Agente gera roteiro completo clonado
         </div>
@@ -1433,7 +1436,11 @@ INSTRUCTIONS = f"""{prompt_base}
     instructions=INSTRUCTIONS,
 
     <span class="cm"># Modelo</span>
-    model=OpenAIChat(id="gpt-4.1-mini"),
+    model=OpenAIChat(
+        id="gpt-5-mini",
+        reasoning_effort="high",
+        verbosity="high",
+    ),
 
     <span class="cm"># Streaming — resposta em tempo real</span>
     stream=True,
@@ -1476,6 +1483,9 @@ INSTRUCTIONS = f"""{prompt_base}
                 <tr><td><code>stream</code></td><td><code>True</code></td><td>Resposta aparece em tempo real no AgentUI (sem travar)</td></tr>
                 <tr><td><code>markdown</code></td><td><code>True</code></td><td>Formata com negrito, listas, headers</td></tr>
                 <tr><td><code>num_history_runs</code></td><td><code>5</code></td><td>Envia ultimas 5 conversas como contexto (10 gastava muitos tokens)</td></tr>
+                <tr><td><code>model</code></td><td><code>gpt-5-mini</code></td><td>Modelo principal de geracao de resposta</td></tr>
+                <tr><td><code>reasoning_effort</code></td><td><code>high</code></td><td>Aumenta qualidade em tarefas complexas de raciocinio</td></tr>
+                <tr><td><code>verbosity</code></td><td><code>high</code></td><td>Respostas mais completas e detalhadas</td></tr>
                 <tr><td><code>update_memory_on_run</code></td><td><code>True</code></td><td>Salva memorias automaticamente (substitui o antigo <code>enable_user_memories</code>)</td></tr>
                 <tr><td><code>add_memories_to_context</code></td><td><code>True</code></td><td>Injeta memorias salvas no prompt</td></tr>
                 <tr><td><code>search_knowledge</code></td><td><code>True</code></td><td>Adiciona tool de busca no ChromaDB</td></tr>
@@ -1505,19 +1515,25 @@ print(response.content)</code></pre>
             <h2>Fluxo Completo do Projeto</h2>
         </div>
 
-        <h3>Ao rodar <code>python agent.py</code></h3>
+        <h3>Ao rodar <code>uv run agent.py</code></h3>
         <ol>
             <li><strong>Transcreve videos novos</strong> — Whisper converte MP4 → JSON, sobe pro ChromaDB</li>
             <li><strong>Ingere apostilas novas</strong> — PDFs sao classificados (pasta + LLM) e sobem pro ChromaDB</li>
+            <li><strong>Ingere YouTube</strong> — Processa fontes de <code>youtube_urls.txt</code> e sobe pro ChromaDB</li>
             <li><strong>Inicia o servidor</strong> — AgentOS + FastAPI servem o agente via API/UI</li>
         </ol>
+
+        <div class="info-box tip">
+            <div class="title">Conexao com AgentUI</div>
+            <p>O servidor sobe em <code>0.0.0.0:7777</code> e o AgentUI deve usar <code>http://localhost:7777</code> (ou <code>http://127.0.0.1:7777</code>) no campo AgentOS.</p>
+        </div>
 
         <h3>Ao receber uma mensagem do usuario</h3>
         <ol>
             <li><strong>Passo 1</strong> — Entende a necessidade (saudacao → pergunta o assunto)</li>
             <li><strong>Passo 2</strong> — Detecta automaticamente se e texto pronto ou tema</li>
             <li><strong>Passo 3A</strong> — Texto pronto: pergunta o creator, clona e reescreve</li>
-            <li><strong>Passo 3B</strong> — Tema: pesquisa base + Tavily → relatorio → recomenda creator → 10 hooks → roteiro</li>
+            <li><strong>Passo 3B</strong> — Tema: pesquisa base + Tavily → relatorio → lista creators → 10 hooks → roteiro</li>
         </ol>
 
         <h3>Arquitetura dos arquivos</h3>
@@ -1559,7 +1575,7 @@ Gera roteiro no estilo clonado</code></pre>
         <ol>
             <li>Crie a pasta: <code>videos/Nome do Creator/</code></li>
             <li>Coloque os MP4s dentro (ate 25MB cada)</li>
-            <li>Reinicie o agente: <code>python agent.py</code></li>
+            <li>Reinicie o agente: <code>uv run agent.py</code></li>
             <li>O agente transcreve automaticamente e ja disponibiliza o creator</li>
         </ol>
     </div>
@@ -1672,3 +1688,6 @@ Gera roteiro no estilo clonado</code></pre>
 
 </body>
 </html>
+
+
+

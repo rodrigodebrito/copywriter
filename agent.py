@@ -103,8 +103,10 @@ agent = Agent(
     instructions=INSTRUCTIONS,
 
     # --- Modelo ---
-    model=OpenAIChat(id="gpt-4.1-mini", api_key=os.getenv("OPENAI_API_KEY")),
-
+    model=OpenAIChat(
+        id="gpt-4.1-mini",
+        api_key=os.getenv("OPENAI_API_KEY"),
+    ),
     # --- Streaming ---
     # Envia a resposta em tempo real para o AgentUI (sem travar esperando)
     stream=True,
@@ -149,7 +151,7 @@ agent_os = AgentOS(
     id="copywriter",
     description="CopyWriter Master — Agente de roteiros e copies",
     agents=[agent],
-    cors_allowed_origins=["*"],
+    cors_allowed_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
 )
 
 app = agent_os.get_app()
@@ -160,7 +162,7 @@ app = agent_os.get_app()
 # ============================================================
 
 def ingerir_tudo():
-    """Roda toda a pipeline de ingestao (videos, apostilas, YouTube)."""
+    """Roda toda a pipeline de ingestao (videos, apostilas, YouTube, perfis)."""
     from transcribe import main as transcrever
     transcrever()
 
@@ -170,7 +172,15 @@ def ingerir_tudo():
     from youtube_ingest import main as ingerir_youtube
     ingerir_youtube()
 
+    # Gera perfis de estilo dos creators (so gera se nao existir)
+    from profiles import main as gerar_perfis
+    gerar_perfis()
+
 
 if __name__ == "__main__":
     ingerir_tudo()
-    agent_os.serve(app="agent:app", reload=True)
+    agent_os.serve(app="agent:app", host="0.0.0.0", port=7777, reload=True)
+
+
+
+

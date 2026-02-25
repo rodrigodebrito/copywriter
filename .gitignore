@@ -15,8 +15,11 @@ wheels/
 # Data (banco local, embeddings, transcricoes)
 data/
 
-# Videos (arquivos grandes, nao vao pro Git)
-videos/
+# Videos — ignora MP4 (pesados) mas permite JSON (transcricoes)
+videos/**/*.mp4
+videos/**/*.mp3
+videos/**/*.wav
+videos/**/*.txt
 
 # Apostilas (PDFs locais)
 apostilas/
