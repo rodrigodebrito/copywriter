@@ -156,6 +156,21 @@ agent_os = AgentOS(
 
 app = agent_os.get_app()
 
+# CORS manual — o AgentOS seta allow_credentials=True que bloqueia "*"
+from starlette.middleware.cors import CORSMiddleware
+
+# Remove o CORS middleware do AgentOS (se existir) e adiciona o nosso
+app.user_middleware = [m for m in app.user_middleware if m.cls is not CORSMiddleware]
+app.middleware_stack = None  # forca rebuild
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.build_middleware_stack()
+
 
 # ============================================================
 # INGESTAO — Processa videos, apostilas e YouTube antes de servir
