@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+
+# Environment variables (API keys!)
+.env
+
+# Data (banco local, embeddings, transcricoes)
+data/
+
+# Videos (arquivos grandes, nao vao pro Git)
+videos/
+
+# Apostilas (PDFs locais)
+apostilas/
+
+# YouTube JSONs ficam em data/ (ja ignorado acima)
+
+# Agent UI (frontend Next.js — projeto separado)
+agent-ui/
+
+# Placeholder do uv init
+main.py
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Claude
+.claude/

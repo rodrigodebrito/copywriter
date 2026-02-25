@@ -1,0 +1,15 @@
+# ============================================================
+# YouTube URLs — Cole aqui as URLs dos videos para transcrever
+# ============================================================
+# Uma URL por linha. Linhas vazias e comentarios (#) sao ignorados.
+#
+# Formatos aceitos:
+#   https://www.youtube.com/watch?v=VIDEO_ID
+#   https://youtu.be/VIDEO_ID
+#   https://youtube.com/shorts/VIDEO_ID
+#
+# Exemplo:
+#   https://www.youtube.com/watch?v=dQw4w9WgXcQ
+# ============================================================
+
+https://www.youtube.com/watch?v=hUv-dTiO7m4

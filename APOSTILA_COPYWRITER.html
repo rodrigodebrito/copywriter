@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyWriter Agent — Apostila Completa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a2e;
+            border-right: 1px solid #2a2a4a;
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            color: #7c4dff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #8888aa;
+            text-decoration: none;
+            padding: 8px 20px;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #7c4dff;
+            background: rgba(124, 77, 255, 0.1);
+            border-left-color: #7c4dff;
+        }
+
+        .sidebar .chapter-num {
+            color: #7c4dff;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 280px;
+            padding: 40px 60px;
+            max-width: 900px;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .hero h1 span {
+            color: #7c4dff;
+        }
+
+        .hero .subtitle {
+            font-size: 18px;
+            color: #8888aa;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 6px 16px;
+            background: rgba(124, 77, 255, 0.15);
+            border: 1px solid #7c4dff;
+            border-radius: 20px;
+            color: #7c4dff;
+            font-size: 13px;
+        }
+
+        /* ===== INTRO BOX ===== */
+        .intro-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 50px;
+        }
+
+        .intro-box h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .intro-box ol {
+            padding-left: 20px;
+        }
+
+        .intro-box li {
+            margin-bottom: 8px;
+            color: #b0b0cc;
+        }
+
+        .intro-box li strong {
+            color: #7c4dff;
+        }
+
+        /* ===== CHAPTERS ===== */
+        .chapter {
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .chapter-number {
+            background: #7c4dff;
+            color: #fff;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .chapter-header h2 {
+            color: #fff;
+            font-size: 26px;
+        }
+
+        h3 {
+            color: #b388ff;
+            font-size: 18px;
+            margin: 25px 0 12px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #b0b0cc;
+        }
+
+        strong {
+            color: #e0e0e0;
+        }
+
+        /* ===== CODE BLOCKS ===== */
+        pre {
+            background: #12121f;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            color: #e0e0e0;
+        }
+
+        p code, li code, td code {
+            background: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #b388ff;
+        }
+
+        .code-label {
+            display: inline-block;
+            background: #7c4dff;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 4px 4px 0 0;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: -1px;
+        }
+
+        /* Syntax highlighting */
+        .kw { color: #c792ea; }
+        .fn { color: #82aaff; }
+        .str { color: #c3e88d; }
+        .cm { color: #546e7a; font-style: italic; }
+        .var { color: #f78c6c; }
+        .op { color: #89ddff; }
+
+        /* ===== DIAGRAM BOXES ===== */
+        .diagram {
+            background: #12121f;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            font-family: 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #8888aa;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .diagram .highlight {
+            color: #7c4dff;
+            font-weight: bold;
+        }
+
+        .diagram .arrow {
+            color: #546e7a;
+        }
+
+        .diagram .label {
+            color: #c3e88d;
+        }
+
+        /* ===== INFO BOXES ===== */
+        .info-box {
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box.tip {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4caf50;
+        }
+
+        .info-box.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left: 4px solid #ff9800;
+        }
+
+        .info-box.important {
+            background: rgba(124, 77, 255, 0.1);
+            border-left: 4px solid #7c4dff;
+        }
+
+        .info-box .title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .info-box.tip .title { color: #4caf50; }
+        .info-box.warning .title { color: #ff9800; }
+        .info-box.important .title { color: #7c4dff; }
+
+        /* ===== LISTS ===== */
+        ul, ol {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            color: #b0b0cc;
+        }
+
+        /* ===== TABLES ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th {
+            background: #1a1a2e;
+            color: #7c4dff;
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #1a1a2e;
+            color: #b0b0cc;
+        }
+
+        tr:hover td {
+            background: rgba(124, 77, 255, 0.05);
+        }
+
+        /* ===== COMPARISON ===== */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison .card {
+            background: #12121f;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .comparison .card.bad {
+            border-color: #f4433650;
+        }
+
+        .comparison .card.good {
+            border-color: #4caf5050;
+        }
+
+        .comparison .card h4 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .comparison .card.bad h4 { color: #f44336; }
+        .comparison .card.good h4 { color: #4caf50; }
+
+        /* ===== FLOW STEPS ===== */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .flow-step .step-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .flow-step .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #7c4dff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .flow-step .step-connector {
+            width: 2px;
+            height: 30px;
+            background: #2a2a4a;
+        }
+
+        .flow-step .step-content {
+            padding-bottom: 20px;
+        }
+
+        .flow-step .step-content h4 {
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .flow-step .step-content p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: #546e7a;
+            font-size: 13px;
+            border-top: 1px solid #1a1a2e;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 20px; }
+            .comparison { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <h2>Apostila</h2>
+    <a href="#intro"><span class="chapter-num"></span>Introducao</a>
+    <a href="#cap1"><span class="chapter-num">01</span>O que e um Agente de IA</a>
+    <a href="#cap2"><span class="chapter-num">02</span>Estrutura do Projeto</a>
+    <a href="#cap3"><span class="chapter-num">03</span>Variaveis de Ambiente</a>
+    <a href="#cap4"><span class="chapter-num">04</span>Pathlib</a>
+    <a href="#cap5"><span class="chapter-num">05</span>SQLite — Memoria</a>
+    <a href="#cap6"><span class="chapter-num">06</span>Embeddings</a>
+    <a href="#cap7"><span class="chapter-num">07</span>ChromaDB</a>
+    <a href="#cap8"><span class="chapter-num">08</span>Knowledge Base</a>
+    <a href="#cap9"><span class="chapter-num">09</span>Metadados</a>
+    <a href="#cap10"><span class="chapter-num">10</span>Ingestao (ingest.py)</a>
+    <a href="#cap11"><span class="chapter-num">11</span>Chunking</a>
+    <a href="#cap12"><span class="chapter-num">12</span>Tavily</a>
+    <a href="#cap13"><span class="chapter-num">13</span>RAG — Tudo Conectado</a>
+    <a href="#cap14"><span class="chapter-num">14</span>Dependencias</a>
+    <a href="#cap15"><span class="chapter-num">15</span>Transcricao (transcribe.py)</a>
+    <a href="#cap16"><span class="chapter-num">16</span>Prompt Engineering</a>
+    <a href="#cap17"><span class="chapter-num">17</span>Streaming e Tuning</a>
+    <a href="#cap18"><span class="chapter-num">18</span>Fluxo Completo</a>
+    <a href="#glossario"><span class="chapter-num">19</span>Glossario</a>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- HERO -->
+    <div class="hero" id="intro">
+        <h1>CopyWriter <span>Agent</span></h1>
+        <p class="subtitle">Apostila Completa para Iniciantes</p>
+        <span class="badge">Fevereiro 2026</span>
+    </div>
+
+    <!-- INTRO -->
+    <div class="intro-box">
+        <h2>O que estamos construindo?</h2>
+        <p>Um <strong>agente de IA</strong> que escreve roteiros e textos (copies) no estilo de autores especificos. Voce da um tema, escolhe um autor, e o agente:</p>
+        <ol>
+            <li>Procura nas <strong>apostilas e transcricoes</strong> que voce forneceu</li>
+            <li>Se nao encontrar, <strong>busca na internet</strong> automaticamente</li>
+            <li>Gera o conteudo no <strong>estilo do autor</strong> escolhido</li>
+            <li><strong>Lembra</strong> das conversas anteriores entre sessoes</li>
+        </ol>
+    </div>
+
+    <!-- CAP 1 -->
+    <div class="chapter" id="cap1">
+        <div class="chapter-header">
+            <div class="chapter-number">01</div>
+            <h2>O que e um Agente de IA?</h2>
+        </div>
+
+        <p>Pense num agente como um <strong>assistente inteligente com ferramentas</strong>.</p>
+
+        <p>Um chatbot normal (como o ChatGPT basico) so responde com base no que ele ja aprendeu no treinamento. Um <strong>agente</strong> vai alem — ele pode:</p>
+
+        <ul>
+            <li><strong>Consultar documentos</strong> seus (apostilas, transcricoes)</li>
+            <li><strong>Buscar na internet</strong> informacoes atualizadas</li>
+            <li><strong>Lembrar</strong> de conversas passadas</li>
+            <li><strong>Tomar decisoes</strong> sobre qual ferramenta usar</li>
+        </ul>
+
+        <div class="comparison">
+            <div class="card bad">
+                <h4>Chatbot Normal</h4>
+                <div class="diagram">Pergunta <span class="arrow">-></span> Resposta
+<span class="cm">(baseada so no treinamento)</span></div>
+            </div>
+            <div class="card good">
+                <h4>Agente de IA</h4>
+                <div class="diagram">Pergunta
+  <span class="arrow">|</span>
+  Preciso de mais info?
+  <span class="arrow">/          \</span>
+<span class="label">Sim</span>          <span class="label">Nao</span>
+ <span class="arrow">|</span>            <span class="arrow">|</span>
+Busca na      Responde
+base/internet    direto
+ <span class="arrow">|</span>
+Responde</div>
+            </div>
+        </div>
+
+        <p>No nosso caso, usamos o framework <strong>Agno</strong> para construir o agente. O Agno cuida de toda a "orquestracao" — ele decide quando buscar nos documentos, quando usar o Tavily, e como montar a resposta final.</p>
+    </div>
+
+    <!-- CAP 2 -->
+    <div class="chapter" id="cap2">
+        <div class="chapter-header">
+            <div class="chapter-number">02</div>
+            <h2>Estrutura do Projeto</h2>
+        </div>
+
+        <pre><code><span class="highlight">CopyWriter/</span>
+│
+├── <span class="fn">agent.py</span>              <span class="cm">← Configuracao do agente (componentes)</span>
+├── <span class="fn">ingest.py</span>             <span class="cm">← Ingestao de documentos (metadados + embeddings)</span>
+├── <span class="fn">main.py</span>               <span class="cm">← Ponto de entrada do programa</span>
+├── <span class="var">.env</span>                  <span class="cm">← Chaves de API (NUNCA compartilhe!)</span>
+├── <span class="fn">pyproject.toml</span>        <span class="cm">← Lista de dependencias</span>
+├── <span class="fn">uv.lock</span>               <span class="cm">← Versoes exatas (gerado automaticamente)</span>
+│
+├── <span class="highlight">data/</span>                 <span class="cm">← Criada automaticamente pelo codigo</span>
+│   ├── agent.db          <span class="cm">← Banco SQLite (historico de conversas)</span>
+│   └── chromadb/         <span class="cm">← Banco vetorial (embeddings)</span>
+│
+├── <span class="highlight">apostilas/</span>            <span class="cm">← PDFs organizados por categoria</span>
+│   ├── <span class="highlight">terapia/</span>
+│   │   ├── <span class="highlight">constelacao/</span>
+│   │   │   └── intro.pdf
+│   │   └── <span class="highlight">hipnose/</span>
+│   │       └── tecnicas.pdf
+│   └── <span class="highlight">marketing/</span>
+│       └── <span class="highlight">copywriting/</span>
+│           └── gatilhos.pdf
+│
+└── <span class="highlight">videos/</span>               <span class="cm">← Videos organizados por autor</span>
+    ├── Fernando Freitas/
+    ├── Luiza Freitas/
+    └── Thamires Hauch/</code></pre>
+    </div>
+
+    <!-- CAP 3 -->
+    <div class="chapter" id="cap3">
+        <div class="chapter-header">
+            <div class="chapter-number">03</div>
+            <h2>Variaveis de Ambiente (.env)</h2>
+        </div>
+
+        <p>Chaves de API sao como <strong>senhas</strong> para acessar servicos externos. Elas <strong>NUNCA</strong> devem ficar no codigo, por seguranca.</p>
+
+        <p>O arquivo <code>.env</code> fica assim:</p>
+
+        <span class="code-label">.env</span>
+        <pre><code>OPENAI_API_KEY=sk-proj-abc123...
+TAVILY_API_KEY=tvly-abc123...</code></pre>
+
+        <p>No codigo, usamos <code>load_dotenv()</code> para carregar essas variaveis:</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+load_dotenv()  <span class="cm"># Le o arquivo .env e disponibiliza as variaveis</span></code></pre>
+
+        <p>Depois disso, qualquer biblioteca que precise da <code>OPENAI_API_KEY</code> encontra automaticamente — voce nao precisa passar manualmente.</p>
+
+        <div class="info-box warning">
+            <div class="title">Por que nao colocar direto no codigo?</div>
+            <ul>
+                <li>Se voce subir o codigo pro GitHub, qualquer pessoa ve sua chave</li>
+                <li>Alguem pode usar sua chave e gerar custos na sua conta</li>
+                <li>O <code>.gitignore</code> deve ignorar o <code>.env</code> para ele nunca ser commitado</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- CAP 4 -->
+    <div class="chapter" id="cap4">
+        <div class="chapter-header">
+            <div class="chapter-number">04</div>
+            <h2>Pathlib — Caminhos que funcionam em qualquer sistema</h2>
+        </div>
+
+        <h3>O Problema</h3>
+        <p>Windows usa <code>\</code> nos caminhos: <code>C:\Users\pasta\arquivo.txt</code><br>
+        Linux/Mac usam <code>/</code>: <code>/home/pasta/arquivo.txt</code></p>
+        <p>Se voce escrever um caminho fixo como <code>/tmp/data.db</code>, <strong>nao funciona no Windows</strong>.</p>
+
+        <h3>A Solucao: pathlib</h3>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="cm"># Path(__file__) = caminho completo DESTE arquivo (agent.py)</span>
+<span class="cm"># .parent = pasta onde o arquivo esta (raiz do projeto)</span>
+<span class="var">BASE_DIR</span> <span class="op">=</span> Path(__file__).parent
+
+<span class="cm"># O operador / junta caminhos de forma segura para qualquer SO</span>
+<span class="var">DB_DIR</span> <span class="op">=</span> BASE_DIR <span class="op">/</span> <span class="str">"data"</span>          <span class="cm"># Windows: CopyWriter\data</span>
+                                     <span class="cm"># Linux:   CopyWriter/data</span>
+
+<span class="var">APOSTILAS_DIR</span> <span class="op">=</span> BASE_DIR <span class="op">/</span> <span class="str">"apostilas"</span></code></pre>
+
+        <h3>Criando pastas automaticamente</h3>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="cm"># mkdir() cria a pasta</span>
+<span class="cm"># exist_ok=True = nao da erro se a pasta ja existir</span>
+DB_DIR.<span class="fn">mkdir</span>(exist_ok<span class="op">=</span><span class="kw">True</span>)
+APOSTILAS_DIR.<span class="fn">mkdir</span>(exist_ok<span class="op">=</span><span class="kw">True</span>)</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Dica</div>
+            <p>Assim, na primeira vez que rodar o projeto, as pastas sao criadas sozinhas. Sem erro, sem preocupacao.</p>
+        </div>
+    </div>
+
+    <!-- CAP 5 -->
+    <div class="chapter" id="cap5">
+        <div class="chapter-header">
+            <div class="chapter-number">05</div>
+            <h2>SQLite — A Memoria do Agente</h2>
+        </div>
+
+        <h3>O que e SQLite?</h3>
+        <p>SQLite e um <strong>banco de dados que fica em um unico arquivo</strong> no seu computador. Nao precisa instalar servidor, nao precisa de configuracao. E como um Excel, mas para programas.</p>
+
+        <h3>Para que usamos?</h3>
+        <p>Para guardar o <strong>historico de conversas</strong>. Quando voce fecha o programa e abre de novo, o agente lembra do que voces conversaram.</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.db.sqlite <span class="kw">import</span> SqliteDb
+
+<span class="var">storage</span> <span class="op">=</span> SqliteDb(
+    db_file<span class="op">=</span><span class="fn">str</span>(DB_DIR <span class="op">/</span> <span class="str">"agent.db"</span>),  <span class="cm"># Arquivo: data/agent.db</span>
+)</code></pre>
+
+        <h3>Como funciona na pratica?</h3>
+
+        <div class="diagram"><span class="label">Sessao 1:</span>
+  Voce: "Escreva um roteiro sobre marketing digital"
+  Agente: "Aqui esta o roteiro..."
+  <span class="arrow">-></span> <span class="highlight">Salva no SQLite</span>
+
+<span class="label">Sessao 2 (outro dia):</span>
+  Voce: "Melhore o roteiro que fizemos ontem"
+  Agente: <span class="highlight">(consulta o SQLite)</span> "Encontrei nosso roteiro anterior..."</div>
+
+        <div class="info-box important">
+            <div class="title">Importante</div>
+            <p>Sem o SQLite, o agente "esqueceria" tudo quando voce fechasse o programa. Como se cada conversa fosse com uma pessoa diferente.</p>
+        </div>
+    </div>
+
+    <!-- CAP 6 -->
+    <div class="chapter" id="cap6">
+        <div class="chapter-header">
+            <div class="chapter-number">06</div>
+            <h2>Embeddings — Transformando texto em numeros</h2>
+        </div>
+
+        <div class="info-box important">
+            <div class="title">Conceito mais importante da apostila!</div>
+            <p>Entender embeddings e a chave para entender como o agente "busca" informacoes nos seus documentos.</p>
+        </div>
+
+        <h3>O Problema</h3>
+        <p>Computadores nao entendem texto. Eles entendem numeros. Se voce quer buscar "dicas de copywriting" nos seus PDFs, uma busca por palavras exatas (Ctrl+F) so encontra se o texto tiver <strong>exatamente</strong> essas palavras.</p>
+        <p>Mas e se o PDF falar sobre "tecnicas de escrita persuasiva"? E a <strong>mesma coisa</strong>, mas com palavras diferentes!</p>
+
+        <h3>A Solucao: Embeddings</h3>
+        <p>Um <strong>embedding</strong> transforma texto em uma lista de numeros (vetor) que representa o <strong>significado</strong> do texto.</p>
+
+        <div class="diagram"><span class="str">"dicas de copywriting"</span>      <span class="arrow">-></span> [0.12, -0.45, 0.78, 0.33, ...]
+<span class="str">"tecnicas de escrita"</span>       <span class="arrow">-></span> [0.11, -0.43, 0.76, 0.35, ...]  <span class="label"><- SIMILAR!</span>
+<span class="str">"receita de bolo"</span>           <span class="arrow">-></span> [-0.89, 0.22, -0.15, 0.67, ...] <span class="cm"><- DIFERENTE!</span></div>
+
+        <p>Textos com significado parecido geram numeros parecidos.<br>
+        Textos com significado diferente geram numeros diferentes.</p>
+
+        <h3>No nosso codigo</h3>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.knowledge.embedder.openai <span class="kw">import</span> OpenAIEmbedder
+
+<span class="cm"># Usamos o modelo text-embedding-3-small da OpenAI</span>
+<span class="cm"># Ele e rapido, barato, e gera vetores com 1536 dimensoes</span>
+<span class="var">embedder</span> <span class="op">=</span> OpenAIEmbedder(id<span class="op">=</span><span class="str">"text-embedding-3-small"</span>)</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Custo</div>
+            <p><code>text-embedding-3-small</code> custa ~$0.02 por 1 milhao de tokens. Muito barato — um PDF inteiro custa centavos.</p>
+        </div>
+    </div>
+
+    <!-- CAP 7 -->
+    <div class="chapter" id="cap7">
+        <div class="chapter-header">
+            <div class="chapter-number">07</div>
+            <h2>ChromaDB — O Banco de Dados Vetorial</h2>
+        </div>
+
+        <h3>O que e um banco vetorial?</h3>
+
+        <div class="comparison">
+            <div class="card">
+                <h4 style="color: #8888aa;">Banco Normal (SQLite)</h4>
+                <p>Busca por valores <strong>exatos</strong>:<br>
+                "Me de todos os registros onde nome = 'Joao'"</p>
+            </div>
+            <div class="card good">
+                <h4>Banco Vetorial (ChromaDB)</h4>
+                <p>Busca por <strong>similaridade</strong>:<br>
+                "Me de os textos mais parecidos com 'dicas de marketing'"</p>
+            </div>
+        </div>
+
+        <h3>Como funciona?</h3>
+
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Carrega o PDF</h4>
+                    <p>Voce coloca um PDF sobre copywriting na pasta <code>apostilas/</code></p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Divide em pedacos (chunks)</h4>
+                    <p>O texto e dividido em trechos menores por significado</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Transforma em embeddings</h4>
+                    <p>Cada pedaco vira uma lista de numeros (vetor)</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">4</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Salva no ChromaDB</h4>
+                    <p>Os embeddings sao salvos no disco para busca futura</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>No nosso codigo</h3>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.vectordb.chroma <span class="kw">import</span> ChromaDb
+
+<span class="var">vector_db</span> <span class="op">=</span> ChromaDb(
+    collection<span class="op">=</span><span class="str">"apostilas"</span>,                        <span class="cm"># Nome da colecao (como uma tabela)</span>
+    path<span class="op">=</span><span class="fn">str</span>(DB_DIR <span class="op">/</span> <span class="str">"chromadb"</span>),                 <span class="cm"># Onde salvar no disco</span>
+    embedder<span class="op">=</span>OpenAIEmbedder(id<span class="op">=</span><span class="str">"text-embedding-3-small"</span>),  <span class="cm"># Modelo de embedding</span>
+    persistent_client<span class="op">=</span><span class="kw">True</span>,                        <span class="cm"># Manter dados entre execucoes</span>
+)</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Analogia: A Biblioteca</div>
+            <p><strong>Banco normal (SQLite):</strong> Voce pede "livro numero 42" e o bibliotecario busca pelo numero exato.</p>
+            <p><strong>Banco vetorial (ChromaDB):</strong> Voce diz "quero algo sobre como vender mais" e o bibliotecario traz os livros mais relevantes, mesmo que nenhum tenha exatamente essas palavras no titulo.</p>
+        </div>
+    </div>
+
+    <!-- CAP 8 -->
+    <div class="chapter" id="cap8">
+        <div class="chapter-header">
+            <div class="chapter-number">08</div>
+            <h2>Knowledge Base — A Base de Conhecimento</h2>
+        </div>
+
+        <p>A Knowledge Base e o componente que <strong>conecta tudo</strong>: le os PDFs, divide em pedacos, transforma em embeddings, e salva no ChromaDB.</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.knowledge <span class="kw">import</span> Knowledge
+<span class="kw">from</span> agno.knowledge.reader.pdf_reader <span class="kw">import</span> PDFReader
+
+<span class="var">knowledge_base</span> <span class="op">=</span> Knowledge(
+    vector_db<span class="op">=</span>vector_db,                    <span class="cm"># Onde salvar os embeddings</span>
+    readers<span class="op">=</span>{                               <span class="cm"># Quais tipos de arquivo sabe ler</span>
+        <span class="str">"pdf"</span>: PDFReader(                   <span class="cm"># Leitor de PDFs</span>
+            chunking_strategy<span class="op">=</span>SemanticChunking()  <span class="cm"># Como dividir o texto</span>
+        )
+    },
+)</code></pre>
+
+        <h3>Fluxo completo</h3>
+
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>PDFReader</h4>
+                    <p>Extrai o texto do arquivo PDF</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>SemanticChunking</h4>
+                    <p>Divide o texto em pedacos por significado</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>OpenAIEmbedder</h4>
+                    <p>Transforma cada pedaco em vetores numericos</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">4</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>ChromaDB</h4>
+                    <p>Salva os embeddings no disco para busca futura</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>O parametro <code>readers</code></h3>
+        <p>O <code>readers</code> e um <strong>dicionario</strong> (dict), nao uma lista. A chave e o nome do tipo de documento, o valor e o leitor:</p>
+
+        <span class="code-label">Python</span>
+        <pre><code>readers<span class="op">=</span>{
+    <span class="str">"pdf"</span>: PDFReader(...),      <span class="cm"># Le arquivos PDF</span>
+    <span class="cm"># No futuro podemos adicionar:</span>
+    <span class="cm"># "txt": TextReader(...),   # Le arquivos TXT</span>
+    <span class="cm"># "csv": CSVReader(...),    # Le arquivos CSV</span>
+}</code></pre>
+    </div>
+
+    <!-- CAP 9 — METADADOS -->
+    <div class="chapter" id="cap9">
+        <div class="chapter-header">
+            <div class="chapter-number">09</div>
+            <h2>Metadados — Etiquetas Inteligentes</h2>
+        </div>
+
+        <p>Metadados sao <strong>etiquetas</strong> que voce gruda nos documentos para poder filtra-los depois. O embedding captura o <strong>significado</strong>, os metadados servem para <strong>filtrar</strong> por categorias exatas.</p>
+
+        <div class="comparison">
+            <div class="card">
+                <h4 style="color: #82aaff;">Embedding (busca por significado)</h4>
+                <p>"Me de textos parecidos com <strong>funil de vendas</strong>"</p>
+            </div>
+            <div class="card">
+                <h4 style="color: #c3e88d;">Metadata (filtro exato)</h4>
+                <p>"Somente documentos onde autor = <strong>Fernando Freitas</strong>"</p>
+            </div>
+        </div>
+
+        <h3>Dois tipos de documento, dois tipos de metadata</h3>
+
+        <p>No CopyWriter temos <strong>duas fontes</strong> com propositos diferentes:</p>
+
+        <div class="comparison">
+            <div class="card">
+                <h4 style="color: #f78c6c;">Transcricoes (ESTILO)</h4>
+                <p>Capturam <strong>como o autor fala</strong> — tom, linguagem, estrutura. Nao importa o tema.</p>
+                <span class="code-label">Metadata</span>
+                <pre><code>{
+    <span class="str">"tipo"</span>: <span class="str">"transcricao"</span>,
+    <span class="str">"autor"</span>: <span class="str">"Fernando Freitas"</span>
+}</code></pre>
+            </div>
+            <div class="card">
+                <h4 style="color: #c792ea;">Apostilas (CONTEUDO)</h4>
+                <p>Tem <strong>informacao sobre assuntos</strong>. Precisa de tema, categoria, etc.</p>
+                <span class="code-label">Metadata</span>
+                <pre><code>{
+    <span class="str">"tipo"</span>: <span class="str">"apostila"</span>,
+    <span class="str">"categoria"</span>: <span class="str">"terapia"</span>,
+    <span class="str">"subcategoria"</span>: <span class="str">"constelacao"</span>,
+    <span class="str">"tema"</span>: <span class="str">"constelacao familiar"</span>,
+    <span class="str">"autor"</span>: <span class="str">"Bert Hellinger"</span>
+}</code></pre>
+            </div>
+        </div>
+
+        <h3>De onde vem os metadados?</h3>
+
+        <p>Usamos uma <strong>combinacao de duas fontes</strong> para gerar metadados automaticamente:</p>
+
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Estrutura de pastas (automatico)</h4>
+                    <p><code>apostilas/terapia/constelacao/intro.pdf</code> → categoria: terapia, subcategoria: constelacao</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Classificacao via LLM (inteligente)</h4>
+                    <p>GPT-4o-mini le um trecho do PDF e retorna: tema, autor, palavras-chave</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Resultado combinado</h4>
+                    <p>Pasta fornece a hierarquia, LLM fornece os detalhes. Tudo junto no ChromaDB.</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Como o agente usa tudo junto</h3>
+
+        <div class="diagram">Usuario: <span class="str">"Roteiro sobre funil de vendas no estilo Fernando Freitas"</span>
+              <span class="arrow">|</span>
+    <span class="arrow">┌─────────┴──────────┐</span>
+    <span class="arrow">|</span>                    <span class="arrow">|</span>
+Busca <span class="label">CONTEUDO</span>       Busca <span class="label">ESTILO</span>
+tipo = "apostila"   tipo = "transcricao"
+tema ~= "funil"     autor = "Fernando Freitas"
+    <span class="arrow">|</span>                    <span class="arrow">|</span>
+    <span class="arrow">└─────────┬──────────┘</span>
+              <span class="arrow">|</span>
+    Gera o roteiro com o
+    <span class="highlight">CONTEUDO</span> da apostila
+    no <span class="highlight">ESTILO</span> do Fernando</div>
+    </div>
+
+    <!-- CAP 10 — INGESTAO -->
+    <div class="chapter" id="cap10">
+        <div class="chapter-header">
+            <div class="chapter-number">10</div>
+            <h2>Ingestao de Documentos (ingest.py)</h2>
+        </div>
+
+        <p>O arquivo <code>ingest.py</code> e responsavel por <strong>processar todos os documentos</strong> e salva-los no ChromaDB com seus metadados. Voce roda ele uma vez (ou quando adicionar novos documentos).</p>
+
+        <span class="code-label">Terminal</span>
+        <pre><code>python ingest.py</code></pre>
+
+        <h3>Fluxo completo da ingestao</h3>
+
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Percorre as pastas</h4>
+                    <p>Encontra todos os PDFs em <code>apostilas/</code> recursivamente (incluindo subpastas)</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Extrai metadados da pasta</h4>
+                    <p><code>apostilas/terapia/constelacao/</code> → categoria: terapia, subcategoria: constelacao</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Extrai texto do PDF</h4>
+                    <p>Usa <code>pypdf</code> para ler o conteudo textual do arquivo</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">4</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Classifica com LLM</h4>
+                    <p>Envia os primeiros 2000 caracteres para o GPT-4o-mini que retorna tema, autor e palavras-chave</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">5</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Combina tudo e salva</h4>
+                    <p>Metadados da pasta + metadados do LLM sao salvos junto com os embeddings no ChromaDB</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Funcao: extrair_metadata_pasta()</h3>
+        <p>Le a posicao do arquivo na arvore de pastas e transforma em metadados:</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">def</span> <span class="fn">extrair_metadata_pasta</span>(caminho_pdf: Path) <span class="op">-></span> dict:
+    <span class="cm"># Pega o caminho relativo a partir de apostilas/</span>
+    <span class="cm"># Ex: terapia/constelacao/intro.pdf</span>
+    relativo <span class="op">=</span> caminho_pdf.<span class="fn">relative_to</span>(APOSTILAS_DIR)
+
+    <span class="cm"># parts = ("terapia", "constelacao", "intro.pdf")</span>
+    partes <span class="op">=</span> relativo.parts[:-<span class="var">1</span>]  <span class="cm"># Remove o nome do arquivo</span>
+
+    metadata <span class="op">=</span> {}
+    <span class="kw">if</span> <span class="fn">len</span>(partes) <span class="op">>=</span> <span class="var">1</span>:
+        metadata[<span class="str">"categoria"</span>] <span class="op">=</span> partes[<span class="var">0</span>]      <span class="cm"># terapia</span>
+    <span class="kw">if</span> <span class="fn">len</span>(partes) <span class="op">>=</span> <span class="var">2</span>:
+        metadata[<span class="str">"subcategoria"</span>] <span class="op">=</span> partes[<span class="var">1</span>]  <span class="cm"># constelacao</span>
+    <span class="kw">return</span> metadata</code></pre>
+
+        <h3>Funcao: classificar_documento()</h3>
+        <p>Envia um trecho do PDF para o GPT-4o-mini classificar automaticamente:</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">def</span> <span class="fn">classificar_documento</span>(texto: str) <span class="op">-></span> dict:
+    client <span class="op">=</span> OpenAI()
+    trecho <span class="op">=</span> texto[:<span class="var">2000</span>]  <span class="cm"># So os primeiros 2000 chars (economia)</span>
+
+    response <span class="op">=</span> client.chat.completions.<span class="fn">create</span>(
+        model<span class="op">=</span><span class="str">"gpt-4o-mini"</span>,
+        response_format<span class="op">=</span>{<span class="str">"type"</span>: <span class="str">"json_object"</span>},
+        messages<span class="op">=</span>[
+            {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"Classifique e retorne JSON com tema, autor, palavras_chave"</span>},
+            {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: f<span class="str">"Classifique:\n\n{trecho}"</span>},
+        ],
+    )
+    <span class="kw">return</span> json.<span class="fn">loads</span>(response.choices[<span class="var">0</span>].message.content)
+    <span class="cm"># Retorna: {"tema": "...", "autor": "...", "palavras_chave": [...]}</span></code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Por que GPT-4o-mini?</div>
+            <p>Classificar documentos e uma tarefa simples — nao precisa de um modelo caro. O GPT-4o-mini e rapido, barato (~$0.15/1M tokens) e suficiente para extrair tema e autor de um trecho de texto.</p>
+        </div>
+
+        <h3>skip_if_exists=True</h3>
+        <p>Este parametro evita reprocessar documentos que ja foram adicionados. Se voce rodar <code>python ingest.py</code> duas vezes, ele so processa os novos PDFs.</p>
+    </div>
+
+    <!-- CAP 11 — CHUNKING (antigo cap 9) -->
+    <div class="chapter" id="cap11">
+        <div class="chapter-header">
+            <div class="chapter-number">11</div>
+            <h2>Chunking — Dividindo textos grandes</h2>
+        </div>
+
+        <h3>Por que dividir?</h3>
+        <p>Modelos de IA tem um limite de texto que podem processar por vez (contexto). Um PDF de 100 paginas nao cabe inteiro. Alem disso, se voce manda o PDF inteiro, a IA se perde — e melhor mandar so os trechos relevantes.</p>
+
+        <h3>Tipos de Chunking</h3>
+
+        <div class="comparison">
+            <div class="card bad">
+                <h4>Tamanho Fixo (ruim)</h4>
+                <div class="diagram">"O marketing digital e
+fundamental para..."
+
+"...empresas modernas.
+A principal vantagem"
+<span class="cm">^ Cortou no meio da ideia!</span>
+
+" e o alcance global..."</div>
+            </div>
+            <div class="card good">
+                <h4>Semantico (bom)</h4>
+                <div class="diagram">"O marketing digital e
+fundamental para
+empresas modernas."
+<span class="label">^ Ideia completa!</span>
+
+"A principal vantagem
+e o alcance global que
+permite atingir clientes
+em qualquer lugar."
+<span class="label">^ Ideia completa!</span></div>
+            </div>
+        </div>
+
+        <p>O <strong>SemanticChunking</strong> usa IA para identificar onde uma ideia termina e outra comeca, mantendo cada pedaco coerente.</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.knowledge.chunking.semantic <span class="kw">import</span> SemanticChunking
+
+<span class="cm"># O SemanticChunking usa a biblioteca "chonkie" por baixo dos panos</span>
+<span class="var">chunking</span> <span class="op">=</span> SemanticChunking()</code></pre>
+    </div>
+
+    <!-- CAP 12 — TAVILY -->
+    <div class="chapter" id="cap12">
+        <div class="chapter-header">
+            <div class="chapter-number">12</div>
+            <h2>Tavily — Busca na Internet</h2>
+        </div>
+
+        <p>O Tavily e uma <strong>API de busca na internet</strong> feita especialmente para agentes de IA. Diferente do Google, ele retorna texto limpo e organizado, pronto para a IA usar.</p>
+
+        <h3>Para que usamos?</h3>
+        <p>Quando o usuario pede um conteudo sobre um tema que <strong>nao esta nas apostilas</strong>, o agente usa o Tavily para buscar informacoes atualizadas na internet.</p>
+
+        <span class="code-label">Python</span>
+        <pre><code><span class="kw">from</span> agno.tools.tavily <span class="kw">import</span> TavilyTools
+
+<span class="cm"># O agente recebe o Tavily como "ferramenta"</span>
+<span class="cm"># Ele decide sozinho quando usar (quando nao encontra na base)</span>
+<span class="var">tools</span> <span class="op">=</span> [TavilyTools()]</code></pre>
+
+        <h3>Fluxo de decisao</h3>
+
+        <div class="diagram">Usuario: <span class="str">"Escreva sobre tendencias de marketing 2026"</span>
+                    <span class="arrow">|</span>
+        Busca no ChromaDB...
+                    <span class="arrow">|</span>
+        Encontrou conteudo relevante?
+              <span class="arrow">/           \</span>
+           <span class="label">Sim</span>             <span class="label">Nao</span>
+            <span class="arrow">|</span>               <span class="arrow">|</span>
+    Usa o conteudo      Busca no <span class="highlight">Tavily</span>
+    das apostilas       (internet)
+            <span class="arrow">\</span>              <span class="arrow">/</span>
+             <span class="arrow">|</span>            <span class="arrow">|</span>
+         Gera o roteiro combinando
+         as informacoes + estilo do autor</div>
+    </div>
+
+    <!-- CAP 13 — RAG -->
+    <div class="chapter" id="cap13">
+        <div class="chapter-header">
+            <div class="chapter-number">13</div>
+            <h2>Como tudo se conecta (RAG)</h2>
+        </div>
+
+        <p>O padrao que estamos usando se chama <strong>RAG</strong> — Retrieval Augmented Generation. Em portugues: "Geracao Aumentada por Recuperacao".</p>
+
+        <div class="comparison">
+            <div class="card bad">
+                <h4>Sem RAG (chatbot comum)</h4>
+                <div class="diagram">Pergunta <span class="arrow">-></span> LLM <span class="arrow">-></span> Resposta
+<span class="cm">(baseada so no treinamento)</span>
+<span class="cm">Pode inventar coisas!</span></div>
+            </div>
+            <div class="card good">
+                <h4>Com RAG (nosso agente)</h4>
+                <div class="diagram">Pergunta
+  <span class="arrow">|</span>
+Busca docs <span class="label"><- RECUPERACAO</span>
+  <span class="arrow">|</span>
+Pergunta + docs <span class="arrow">-></span> LLM <span class="label"><- AUMENTO</span>
+  <span class="arrow">|</span>
+Resposta <span class="label"><- GERACAO</span></div>
+            </div>
+        </div>
+
+        <h3>O fluxo completo do CopyWriter</h3>
+
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Usuario faz o pedido</h4>
+                    <p>"Roteiro sobre X no estilo do autor Y"</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Busca no ChromaDB</h4>
+                    <p>Trechos de apostilas sobre o tema + transcricoes do autor para captar o estilo</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Encontrou o suficiente?</h4>
+                    <p>Sim: usa o conteudo encontrado. Nao: complementa com Tavily (internet)</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">4</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Monta o prompt</h4>
+                    <p>"Com base nestes documentos, escreva um roteiro sobre [tema] no estilo de [autor]"</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">5</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>OpenAI gera o roteiro</h4>
+                    <p>O modelo recebe tudo e gera o conteudo final</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="step-line">
+                    <div class="step-dot">6</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <h4>Salva e retorna</h4>
+                    <p>Salva a conversa no SQLite e retorna o roteiro para o usuario</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAP 14 — DEPENDENCIAS -->
+    <div class="chapter" id="cap14">
+        <div class="chapter-header">
+            <div class="chapter-number">14</div>
+            <h2>Dependencias do Projeto</h2>
+        </div>
+
+        <p>Cada biblioteca no <code>pyproject.toml</code> tem uma funcao especifica:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Pacote</th>
+                    <th>Para que serve</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>agno</code></td><td>Framework principal do agente — orquestra tudo</td></tr>
+                <tr><td><code>openai</code></td><td>Comunicacao com a API da OpenAI (GPT + Embeddings)</td></tr>
+                <tr><td><code>chromadb</code></td><td>Banco de dados vetorial (armazena embeddings)</td></tr>
+                <tr><td><code>pypdf</code></td><td>Leitura de arquivos PDF</td></tr>
+                <tr><td><code>chonkie[semantic]</code></td><td>Divisao inteligente de texto (semantic chunking)</td></tr>
+                <tr><td><code>sqlalchemy</code></td><td>Biblioteca que o agno usa para acessar o SQLite</td></tr>
+                <tr><td><code>python-dotenv</code></td><td>Carrega variaveis de ambiente do arquivo .env</td></tr>
+                <tr><td><code>tavily</code></td><td>API de busca na internet para agentes de IA</td></tr>
+                <tr><td><code>fastapi</code></td><td>Framework web usado pelo AgentOS para servir o agente via API</td></tr>
+            </tbody>
+        </table>
+
+        <h3>O que e <code>uv</code>?</h3>
+        <p><code>uv</code> e o <strong>gerenciador de pacotes</strong> que usamos (alternativa ao pip). Ele e muito mais rapido que o pip e gerencia ambientes virtuais automaticamente.</p>
+
+        <span class="code-label">Terminal</span>
+        <pre><code>uv pip install pacote            <span class="cm"># Instala um pacote</span>
+uv pip install --upgrade pacote  <span class="cm"># Atualiza um pacote</span>
+uv pip list                      <span class="cm"># Lista pacotes instalados</span>
+uv sync                          <span class="cm"># Instala tudo do pyproject.toml</span></code></pre>
+    </div>
+
+    <!-- CAP 15 — TRANSCRICAO -->
+    <div class="chapter" id="cap15">
+        <div class="chapter-header">
+            <div class="chapter-number">15</div>
+            <h2>Transcricao de Videos (transcribe.py)</h2>
+        </div>
+
+        <p>O <code>transcribe.py</code> transcreve os videos dos creators usando a <strong>API Whisper da OpenAI</strong> e salva no ChromaDB com metadados.</p>
+
+        <h3>Como funciona</h3>
+        <ol>
+            <li>Percorre as pastas em <code>videos/</code> (cada pasta = um creator)</li>
+            <li>Para cada MP4, envia para o Whisper (aceita ate 25MB)</li>
+            <li>Salva a transcricao em <strong>JSON</strong> com metadados</li>
+            <li>Sobe para o ChromaDB com <code>skip_if_exists=True</code></li>
+        </ol>
+
+        <h3>Formato JSON de saida</h3>
+        <span class="code-label">JSON</span>
+        <pre><code>{
+  "autor": "Fernando Freitas",
+  "tipo": "transcricao",
+  "arquivo_original": "video.mp4",
+  "transcricao": "Texto transcrito aqui..."
+}</code></pre>
+
+        <h3>Comportamento incremental</h3>
+        <p>O script e <strong>incremental</strong> — so processa o que e novo:</p>
+        <ul>
+            <li>Se ja tem <code>.json</code> → pula (ja transcrito)</li>
+            <li>Se tem <code>.txt</code> mas nao <code>.json</code> → converte para JSON</li>
+            <li>Se nao tem nada → transcreve com Whisper</li>
+        </ul>
+
+        <h3>Startup automatico</h3>
+        <p>No <code>agent.py</code>, o <code>transcribe.py</code> roda automaticamente ao iniciar o agente:</p>
+        <span class="code-label">agent.py</span>
+        <pre><code>if __name__ == "__main__":
+    from transcribe import main as transcrever
+    transcrever()               <span class="cm"># Transcreve videos novos</span>
+
+    from ingest import ingerir_apostilas
+    ingerir_apostilas()          <span class="cm"># Ingere PDFs novos</span>
+
+    agent_os.serve(app="agent:app", reload=True)</code></pre>
+
+        <p>Para adicionar um creator novo, basta criar a pasta em <code>videos/</code> com os MP4s e reiniciar o agente.</p>
+    </div>
+
+    <!-- CAP 16 — PROMPT ENGINEERING -->
+    <div class="chapter" id="cap16">
+        <div class="chapter-header">
+            <div class="chapter-number">16</div>
+            <h2>Prompt Engineering (prompt.md)</h2>
+        </div>
+
+        <p>O <strong>prompt</strong> e o "cerebro" do agente — e ele que define COMO o agente se comporta. No nosso projeto, o prompt fica em um arquivo separado (<code>prompt.md</code>) para facilitar edicao sem mexer no codigo.</p>
+
+        <h3>Por que arquivo separado?</h3>
+        <span class="code-label">agent.py</span>
+        <pre><code>PROMPT_FILE = BASE_DIR / "prompt.md"
+prompt_base = PROMPT_FILE.read_text(encoding="utf-8")
+
+INSTRUCTIONS = f"""{prompt_base}
+
+## CREATORS DISPONIVEIS
+{lista_autores}
+"""</code></pre>
+        <p>A lista de creators e injetada <strong>dinamicamente</strong> — se voce adicionar uma pasta nova em <code>videos/</code>, o prompt se atualiza sozinho.</p>
+
+        <h3>Estrutura do prompt</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Secao</th>
+                    <th>O que faz</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>ROLE</strong></td><td>Define o agente como CLONADOR de estilo, nao apenas analisador</td></tr>
+                <tr><td><strong>Fluxo de Atendimento</strong></td><td>Funil passo a passo que o agente deve seguir (nunca pular etapas)</td></tr>
+                <tr><td><strong>10 Pontos de Clonagem</strong></td><td>Tom, energia, linguajar, bordoes, estrutura, ritmo, analogias, emocao, hook, CTA</td></tr>
+                <tr><td><strong>Regra de Ouro</strong></td><td>"Se tirar o nome e alguem ler, tem que reconhecer o creator"</td></tr>
+                <tr><td><strong>Aprendizado Continuo</strong></td><td>Memoriza correcoes do usuario e melhora a cada uso</td></tr>
+                <tr><td><strong>Formato de Saida</strong></td><td>Template com [HOOK 0-3s], [DESENVOLVIMENTO 3-45s], [CTA 5s]</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Os 10 pontos de clonagem</h3>
+        <p>Quando o agente recebe o nome de um creator, ele analisa:</p>
+        <ol>
+            <li><strong>Tom de voz</strong> — Provocativo? Acolhedor? Tecnico?</li>
+            <li><strong>Energia</strong> — Urgencia? Calma? Raiva controlada?</li>
+            <li><strong>Linguajar</strong> — Girias? Formal? Interjeicoes? ("Po", "Mano")</li>
+            <li><strong>Frases marcantes</strong> — Bordoes que ele repete</li>
+            <li><strong>Estrutura de pensamento</strong> — Comeca com pergunta? Afirmacao?</li>
+            <li><strong>Ritmo</strong> — Frases curtas ou longas? Alterna?</li>
+            <li><strong>Analogias</strong> — Comparacoes do dia a dia? Tecnicas?</li>
+            <li><strong>Emocao dominante</strong> — Revolta? Reflexao? Empoderamento?</li>
+            <li><strong>Padrao de hook</strong> — Como prende nos primeiros 3 segundos</li>
+            <li><strong>Padrao de CTA</strong> — Como fecha? Convida? Desafia?</li>
+        </ol>
+
+        <h3>Fluxo do agente (Modo 2 — Criacao a partir de tema)</h3>
+        <div class="info-box">
+            <strong>Usuario diz "ola"</strong> → Agente se apresenta e pergunta o assunto<br>
+            <strong>Usuario diz "autoestima"</strong> → Agente pesquisa base + Tavily, mostra relatorio<br>
+            <strong>Agente recomenda creator</strong> → Baseado em quem fala sobre o tema<br>
+            <strong>Usuario escolhe</strong> → Agente gera 10 hooks no estilo do creator<br>
+            <strong>Usuario aprova hook</strong> → Agente gera roteiro completo clonado
+        </div>
+    </div>
+
+    <!-- CAP 17 — STREAMING E TUNING -->
+    <div class="chapter" id="cap17">
+        <div class="chapter-header">
+            <div class="chapter-number">17</div>
+            <h2>Streaming e Tuning do Agente</h2>
+        </div>
+
+        <p>O <strong>tuning</strong> e o processo de ajustar os parametros do agente para melhor performance. Aqui estao os parametros otimizados do nosso projeto:</p>
+
+        <h3>Configuracao completa do Agent</h3>
+        <span class="code-label">agent.py</span>
+        <pre><code>agent = Agent(
+    <span class="cm"># Identidade</span>
+    name="copywriter_master",
+    description="CopyWriter Master — Cria roteiros...",
+    instructions=INSTRUCTIONS,
+
+    <span class="cm"># Modelo</span>
+    model=OpenAIChat(id="gpt-4.1-mini"),
+
+    <span class="cm"># Streaming — resposta em tempo real</span>
+    stream=True,
+
+    <span class="cm"># Formatacao Markdown na UI</span>
+    markdown=True,
+
+    <span class="cm"># Historico — ultimas 5 conversas</span>
+    db=storage,
+    add_history_to_context=True,
+    num_history_runs=5,
+
+    <span class="cm"># Memoria persistente entre sessoes</span>
+    update_memory_on_run=True,
+    add_memories_to_context=True,
+
+    <span class="cm"># Knowledge Base (RAG)</span>
+    knowledge=knowledge_base,
+    search_knowledge=True,
+    add_search_knowledge_instructions=True,
+
+    <span class="cm"># Tools + protecao</span>
+    tools=tools,
+    tool_call_limit=10,
+
+    <span class="cm"># Data/hora no contexto</span>
+    add_datetime_to_context=True,
+)</code></pre>
+
+        <h3>O que cada parametro faz</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parametro</th>
+                    <th>Valor</th>
+                    <th>Funcao</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>stream</code></td><td><code>True</code></td><td>Resposta aparece em tempo real no AgentUI (sem travar)</td></tr>
+                <tr><td><code>markdown</code></td><td><code>True</code></td><td>Formata com negrito, listas, headers</td></tr>
+                <tr><td><code>num_history_runs</code></td><td><code>5</code></td><td>Envia ultimas 5 conversas como contexto (10 gastava muitos tokens)</td></tr>
+                <tr><td><code>update_memory_on_run</code></td><td><code>True</code></td><td>Salva memorias automaticamente (substitui o antigo <code>enable_user_memories</code>)</td></tr>
+                <tr><td><code>add_memories_to_context</code></td><td><code>True</code></td><td>Injeta memorias salvas no prompt</td></tr>
+                <tr><td><code>search_knowledge</code></td><td><code>True</code></td><td>Adiciona tool de busca no ChromaDB</td></tr>
+                <tr><td><code>tool_call_limit</code></td><td><code>10</code></td><td>Previne loops infinitos de tool calls</td></tr>
+                <tr><td><code>add_datetime_to_context</code></td><td><code>True</code></td><td>Agente sabe a data/hora atual</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Streaming — como funciona</h3>
+        <p>Sem streaming, o usuario fica olhando uma tela em branco ate a resposta completa chegar. Com <code>stream=True</code>, cada palavra aparece assim que e gerada — igual ao ChatGPT.</p>
+        <p>No AgentUI, o streaming ja funciona automaticamente. Para testes no terminal:</p>
+        <span class="code-label">Python</span>
+        <pre><code><span class="cm"># Com streaming (tempo real)</span>
+response = agent.run("Crie um roteiro")
+for chunk in response:
+    print(chunk.content, end="", flush=True)
+
+<span class="cm"># Sem streaming (espera tudo)</span>
+response = agent.run("Crie um roteiro", stream=False)
+print(response.content)</code></pre>
+    </div>
+
+    <!-- CAP 18 — FLUXO COMPLETO -->
+    <div class="chapter" id="cap18">
+        <div class="chapter-header">
+            <div class="chapter-number">18</div>
+            <h2>Fluxo Completo do Projeto</h2>
+        </div>
+
+        <h3>Ao rodar <code>python agent.py</code></h3>
+        <ol>
+            <li><strong>Transcreve videos novos</strong> — Whisper converte MP4 → JSON, sobe pro ChromaDB</li>
+            <li><strong>Ingere apostilas novas</strong> — PDFs sao classificados (pasta + LLM) e sobem pro ChromaDB</li>
+            <li><strong>Inicia o servidor</strong> — AgentOS + FastAPI servem o agente via API/UI</li>
+        </ol>
+
+        <h3>Ao receber uma mensagem do usuario</h3>
+        <ol>
+            <li><strong>Passo 1</strong> — Entende a necessidade (saudacao → pergunta o assunto)</li>
+            <li><strong>Passo 2</strong> — Detecta automaticamente se e texto pronto ou tema</li>
+            <li><strong>Passo 3A</strong> — Texto pronto: pergunta o creator, clona e reescreve</li>
+            <li><strong>Passo 3B</strong> — Tema: pesquisa base + Tavily → relatorio → recomenda creator → 10 hooks → roteiro</li>
+        </ol>
+
+        <h3>Arquitetura dos arquivos</h3>
+        <span class="code-label">Estrutura</span>
+        <pre><code>CopyWriter/
+├── agent.py          <span class="cm"># Configuracao do agente (parametros, tools, knowledge)</span>
+├── prompt.md         <span class="cm"># Cerebro do agente (instrucoes de comportamento)</span>
+├── transcribe.py     <span class="cm"># Transcreve videos com Whisper → JSON → ChromaDB</span>
+├── ingest.py         <span class="cm"># Ingere PDFs com metadados (pasta + LLM) → ChromaDB</span>
+├── .env              <span class="cm"># Chaves de API (OpenAI, Tavily)</span>
+├── pyproject.toml    <span class="cm"># Dependencias do projeto</span>
+├── videos/           <span class="cm"># Pasta dos creators (MP4 + JSON)</span>
+│   ├── Fernando Freitas/
+│   ├── Luiza Freitas/
+│   └── Thamires Hauch/
+├── apostilas/        <span class="cm"># PDFs organizados por categoria</span>
+│   └── terapia/constelacao/
+└── data/             <span class="cm"># Dados persistentes</span>
+    ├── agent.db      <span class="cm"># SQLite (historico + memorias)</span>
+    └── chromadb/     <span class="cm"># Banco vetorial (embeddings)</span></code></pre>
+
+        <h3>Fluxo de dados</h3>
+        <span class="code-label">Diagrama</span>
+        <pre><code>MP4 → Whisper → JSON → ChromaDB (transcricoes/estilo)
+PDF → pypdf → LLM classifica → ChromaDB (apostilas/conteudo)
+Internet → Tavily → Conteudo atualizado
+
+Usuario faz pergunta
+    ↓
+Agente busca no ChromaDB (RAG)
+    ↓
+Complementa com Tavily se necessario
+    ↓
+Clona estilo do creator (10 pontos)
+    ↓
+Gera roteiro no estilo clonado</code></pre>
+
+        <h3>Para adicionar um novo creator</h3>
+        <ol>
+            <li>Crie a pasta: <code>videos/Nome do Creator/</code></li>
+            <li>Coloque os MP4s dentro (ate 25MB cada)</li>
+            <li>Reinicie o agente: <code>python agent.py</code></li>
+            <li>O agente transcreve automaticamente e ja disponibiliza o creator</li>
+        </ol>
+    </div>
+
+    <!-- GLOSSARIO -->
+    <div class="chapter" id="glossario">
+        <div class="chapter-header">
+            <div class="chapter-number">19</div>
+            <h2>Glossario</h2>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Termo</th>
+                    <th>Significado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Agente</strong></td><td>Programa de IA que usa ferramentas para completar tarefas</td></tr>
+                <tr><td><strong>LLM</strong></td><td>Large Language Model — modelo grande de linguagem (ex: GPT-4)</td></tr>
+                <tr><td><strong>Embedding</strong></td><td>Representacao numerica (vetor) do significado de um texto</td></tr>
+                <tr><td><strong>Vector DB</strong></td><td>Banco de dados que busca por similaridade de significado</td></tr>
+                <tr><td><strong>RAG</strong></td><td>Retrieval Augmented Generation — buscar docs antes de gerar texto</td></tr>
+                <tr><td><strong>Chunk</strong></td><td>Pedaco de texto resultante da divisao de um documento maior</td></tr>
+                <tr><td><strong>Token</strong></td><td>Unidade de texto para a IA (~4 caracteres ou ~0.75 palavras)</td></tr>
+                <tr><td><strong>Metadata</strong></td><td>Etiquetas/informacoes extras associadas a um documento (autor, tema, categoria)</td></tr>
+                <tr><td><strong>Ingestao</strong></td><td>Processo de carregar, processar e salvar documentos na base de conhecimento</td></tr>
+                <tr><td><strong>Collection</strong></td><td>Grupo de documentos no banco vetorial (similar a uma tabela no SQL)</td></tr>
+                <tr><td><strong>API</strong></td><td>Interface para comunicacao entre programas</td></tr>
+                <tr><td><strong>API Key</strong></td><td>Chave/senha para acessar uma API</td></tr>
+                <tr><td><strong>Framework</strong></td><td>Conjunto de ferramentas e padroes para construir software</td></tr>
+                <tr><td><strong>.env</strong></td><td>Arquivo que guarda variaveis de ambiente (chaves, configs)</td></tr>
+                <tr><td><strong>venv</strong></td><td>Ambiente virtual — instalacao isolada de pacotes Python</td></tr>
+                <tr><td><strong>Prompt</strong></td><td>Instrucao/pergunta enviada para a IA</td></tr>
+                <tr><td><strong>Alucinacao</strong></td><td>Quando a IA inventa informacoes que parecem verdadeiras</td></tr>
+                <tr><td><strong>Contexto</strong></td><td>Quantidade de texto que a IA consegue processar de uma vez</td></tr>
+                <tr><td><strong>Persistente</strong></td><td>Que sobrevive apos fechar o programa (salvo em disco)</td></tr>
+                <tr><td><strong>AgentOS</strong></td><td>Servidor do Agno que expoe o agente via API web (FastAPI)</td></tr>
+                <tr><td><strong>Streaming</strong></td><td>Tecnica de enviar a resposta em tempo real, palavra por palavra</td></tr>
+                <tr><td><strong>Whisper</strong></td><td>Modelo da OpenAI que transcreve audio/video em texto</td></tr>
+                <tr><td><strong>Tuning</strong></td><td>Ajuste fino dos parametros do agente para melhor performance</td></tr>
+                <tr><td><strong>Hook</strong></td><td>Gancho — frase inicial que prende a atencao nos primeiros 3 segundos</td></tr>
+                <tr><td><strong>CTA</strong></td><td>Call To Action — chamada para acao no final do conteudo</td></tr>
+                <tr><td><strong>Clonagem de estilo</strong></td><td>Processo de analisar e replicar o tom, energia e linguajar de um creator</td></tr>
+                <tr><td><strong>Creator</strong></td><td>Criador de conteudo cujo estilo sera clonado pelo agente</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PROXIMOS PASSOS -->
+    <div class="chapter">
+        <div class="chapter-header">
+            <div class="chapter-number" style="background: #ff9800;">?</div>
+            <h2>Proximos Passos</h2>
+        </div>
+        <p>O que ja foi implementado e o que pode ser melhorado:</p>
+
+        <h3>Implementado</h3>
+        <ul>
+            <li>&#10003; Transcricao automatica de videos com Whisper</li>
+            <li>&#10003; Prompt de clonagem com 10 pontos de analise</li>
+            <li>&#10003; Fluxo de atendimento em funil (saudacao → tema → creator → hooks → roteiro)</li>
+            <li>&#10003; Streaming em tempo real</li>
+            <li>&#10003; Memoria persistente com aprendizado continuo</li>
+            <li>&#10003; Recomendacao inteligente de creator por tema</li>
+            <li>&#10003; Ingestao automatica no startup</li>
+        </ul>
+
+        <h3>Melhorias futuras</h3>
+        <ol>
+            <li><strong>Mais videos por creator</strong> — Quanto mais transcricoes, melhor a clonagem</li>
+            <li><strong>Apostilas especializadas</strong> — Material do nicho dos creators (nao generico)</li>
+            <li><strong>Interface frontend customizada</strong> — Alem do AgentUI padrao</li>
+            <li><strong>Suporte a videos longos</strong> — Dividir videos &gt;25MB automaticamente</li>
+        </ol>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>Apostila gerada para o projeto CopyWriter — Fevereiro 2026</p>
+    </div>
+
+</div>
+
+<!-- Scroll spy for sidebar -->
+<script>
+    const links = document.querySelectorAll('.sidebar a');
+    const sections = [];
+
+    links.forEach(link => {
+        const id = link.getAttribute('href').substring(1);
+        const el = document.getElementById(id);
+        if (el) sections.push({ id, el, link });
+    });
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => {
+            if (s.el.getBoundingClientRect().top <= 100) {
+                current = s.id;
+            }
+        });
+        links.forEach(l => l.classList.remove('active'));
+        sections.forEach(s => {
+            if (s.id === current) s.link.classList.add('active');
+        });
+    });
+</script>
+
+</body>
+</html>
