@@ -30,16 +30,31 @@ from agent import knowledge_base, VIDEOS_DIR, DB_DIR
 load_dotenv()
 
 
+def _encontrar_ffmpeg() -> str:
+    """Encontra o executavel do ffmpeg (PATH ou winget)."""
+    import shutil
+    ff = shutil.which("ffmpeg")
+    if ff:
+        return ff
+    # Procura na pasta do winget (Windows)
+    winget_dir = Path.home() / "AppData/Local/Microsoft/WinGet/Packages"
+    if winget_dir.exists():
+        for p in winget_dir.rglob("ffmpeg.exe"):
+            return str(p)
+    raise FileNotFoundError("ffmpeg nao encontrado")
+
+
 def _extrair_audio(caminho_video: Path) -> Path:
     """
     Extrai o audio de um video MP4 para MP3 comprimido usando ffmpeg.
     Retorna o caminho do arquivo MP3 temporario.
     Um video de 100MB vira ~3-5MB de audio.
     """
+    ffmpeg = _encontrar_ffmpeg()
     audio_path = Path(tempfile.mktemp(suffix=".mp3"))
     subprocess.run(
         [
-            "ffmpeg", "-i", str(caminho_video),
+            ffmpeg, "-i", str(caminho_video),
             "-vn",              # sem video
             "-acodec", "libmp3lame",
             "-ab", "64k",       # bitrate baixo (suficiente pra voz)
