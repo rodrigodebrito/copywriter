@@ -128,10 +128,9 @@ else:
 # ============================================================
 def get_model():
     return OpenAIChat(
-        id="gpt-5-mini",
+        id="gpt-5",
         api_key=os.getenv("OPENAI_API_KEY"),
-        reasoning_effort="medium",
-        verbosity="low",
+        reasoning_effort="high",
     )
 
 # ============================================================
@@ -361,7 +360,7 @@ def health_check():
     """Endpoint de health check para o Render."""
     return {
         "status": "ok",
-        "model": "gpt-5-mini",
+        "model": "gpt-5",
         "mode": "team",
         "agents": ["reels_copywriter", "stories_copywriter"],
         "creators": len(autores_disponiveis),
