@@ -262,6 +262,7 @@ team = Team(
 
     # --- Streaming ---
     stream=True,
+    stream_member_events=False,  # Evita duplicacao: so o orquestrador entrega o resultado
     markdown=True,
 
     # --- Historico ---
