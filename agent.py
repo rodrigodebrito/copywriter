@@ -210,19 +210,19 @@ def health_check():
 
 
 # ============================================================
-# STARTUP — Sempre sincroniza dados (incremental com skip_if_exists)
+# STARTUP — Sincroniza dados em background (nao bloqueia a porta)
 # ============================================================
-# Roda toda vez no startup mas e rapido: skip_if_exists=True faz
-# com que docs ja existentes sejam pulados instantaneamente.
-# Assim, creators novos sao ingeridos automaticamente no deploy.
+# A ingestao roda em uma thread separada DEPOIS que o servidor
+# ja abriu a porta. Isso evita o "No open ports detected" do Render.
 
 import json as _json
+import threading
 from contextlib import asynccontextmanager
 
-@asynccontextmanager
-async def lifespan(application):
-    """Sincroniza o ChromaDB no startup (incremental)."""
-    print("\n=== STARTUP: Sincronizando ChromaDB ===\n")
+
+def _sincronizar_chromadb():
+    """Sincroniza o ChromaDB em background (thread separada)."""
+    print("\n=== BACKGROUND: Sincronizando ChromaDB ===\n")
 
     # 1) Transcricoes dos creators (JSONs em videos/*/)
     if VIDEOS_DIR.exists():
@@ -268,7 +268,14 @@ async def lifespan(application):
     except Exception as e:
         print(f"  [perfis]: ERRO - {e}")
 
-    print("\n=== STARTUP: ChromaDB pronto ===\n")
+    print("\n=== BACKGROUND: ChromaDB pronto ===\n")
+
+
+@asynccontextmanager
+async def lifespan(application):
+    """Inicia sincronizacao em background e libera a porta imediatamente."""
+    thread = threading.Thread(target=_sincronizar_chromadb, daemon=True)
+    thread.start()
     yield
 
 app.router.lifespan_context = lifespan
