@@ -88,7 +88,9 @@ Se o usuario envia TEXTO PRONTO (em vez de tema), o agente pula direto para perg
 
 ## Parametros do Agent (tuning)
 
-- `model="gpt-4.1-mini"`
+- `model="gpt-5-mini"` — modelo GPT-5 mini (melhor qualidade criativa, custo similar ao 4.1-mini)
+- `reasoning_effort="medium"` — equilibrio entre velocidade e qualidade de raciocinio
+- `verbosity="high"` — respostas detalhadas (roteiros longos e completos)
 - `stream=True` — resposta em tempo real
 - `markdown=True` — formatacao na UI
 - `num_history_runs=5` — ultimas 5 conversas como contexto
