@@ -99,26 +99,31 @@ def baixar_transcricao(video_id: str) -> dict | None:
     """
     api = YouTubeTranscriptApi()
 
-    # Tenta idiomas preferenciais
-    idiomas_preferidos = ["pt", "pt-BR", "en"]
+    result = None
 
+    # Tenta fetch direto com idiomas preferenciais
     try:
-        result = api.fetch(video_id, languages=idiomas_preferidos)
+        result = api.fetch(video_id, languages=["pt", "pt-BR", "en"])
     except Exception:
-        # Fallback: tenta qualquer idioma disponivel
+        pass
+
+    # Fallback: lista as transcricoes disponiveis e busca a primeira
+    if result is None:
         try:
-            transcripts = api.list(video_id)
-            # Pega o primeiro disponivel
-            for transcript in transcripts:
-                result = transcript.fetch()
-                break
-            else:
-                return None
+            transcript_list = api.list(video_id)
+            for transcript in transcript_list:
+                try:
+                    result = transcript.fetch()
+                    break
+                except Exception:
+                    continue
         except Exception:
             return None
 
+    if result is None:
+        return None
+
     # Junta todos os snippets em texto corrido
-    # Substitui \n por espaco para texto mais limpo
     texto = " ".join(
         s.text.replace("\n", " ") for s in result.snippets
     )
