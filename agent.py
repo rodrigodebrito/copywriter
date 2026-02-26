@@ -65,9 +65,31 @@ knowledge_base = Knowledge(
 # ============================================================
 autores_disponiveis = []
 if VIDEOS_DIR.exists():
-    autores_disponiveis = [p.name for p in VIDEOS_DIR.iterdir() if p.is_dir()]
+    autores_disponiveis = sorted([p.name for p in VIDEOS_DIR.iterdir() if p.is_dir()])
 
-lista_autores = ", ".join(autores_disponiveis) if autores_disponiveis else "Nenhum autor cadastrado ainda"
+# Monta lista com descricao do perfil (se existir)
+def _montar_lista_autores():
+    if not autores_disponiveis:
+        return "Nenhum autor cadastrado ainda"
+    linhas = []
+    profiles_dir = DB_DIR / "profiles"
+    for autor in autores_disponiveis:
+        descricao = ""
+        perfil_path = profiles_dir / f"{autor}.json"
+        if perfil_path.exists():
+            import json as _j2
+            try:
+                perfil = _j2.loads(perfil_path.read_text(encoding="utf-8"))
+                descricao = perfil.get("resumo_estilo", "")[:80]
+            except Exception:
+                pass
+        if descricao:
+            linhas.append(f"- **{autor}** — {descricao}")
+        else:
+            linhas.append(f"- **{autor}**")
+    return "\n".join(linhas)
+
+lista_autores = _montar_lista_autores()
 
 # ============================================================
 # INSTRUCTIONS — Carrega os prompts dos arquivos separados
