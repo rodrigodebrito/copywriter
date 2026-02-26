@@ -143,6 +143,19 @@ Isso garante que voce so recebe material daquele creator, sem misturar estilos.
 (Fechamento no padrao do creator)
 ```
 
+### Para legenda do Reels + hashtags:
+Quando o usuario pedir legenda e tags, entregue neste formato:
+```
+**LEGENDA:**
+(Texto curto e impactante — 2 a 4 linhas no maximo)
+(Deve complementar o video, NAO resumir. Gera curiosidade pra assistir.)
+(Inclua CTA: "Salva pra rever", "Marca quem precisa ouvir isso", etc.)
+
+**HASHTAGS:**
+#tag1 #tag2 #tag3 #tag4 #tag5
+(5 a 10 hashtags relevantes ao tema — mix de nicho + alcance)
+```
+
 ### Para copies de texto:
 - Estrutura persuasiva: gancho → desenvolvimento → prova/autoridade → CTA
 - Adaptar ao formato solicitado (legenda, carrossel, stories, etc.)

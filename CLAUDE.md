@@ -4,8 +4,8 @@ Agente de IA que CLONA o estilo de criadores de conteudo (creators) para gerar r
 
 ## Stack
 
-- **Framework**: Agno v2.5.4 (orquestracao de agentes)
-- **LLM**: OpenAI GPT-4.1-mini (geracao) + Whisper (transcricao)
+- **Framework**: Agno v2.5.4 (orquestracao de agentes + Team mode)
+- **LLM**: OpenAI GPT-5-mini (geracao) + Whisper (transcricao)
 - **Vector DB**: ChromaDB (embeddings persistentes)
 - **Embeddings**: OpenAI text-embedding-3-small
 - **Memoria**: SQLite via agno.db.sqlite (historico + memorias de usuario)
@@ -15,12 +15,32 @@ Agente de IA que CLONA o estilo de criadores de conteudo (creators) para gerar r
 - **Deploy**: Render (render.yaml com persistent disk)
 - **Package manager**: uv
 
+## Arquitetura Multi-Agente (Team Mode)
+
+O sistema usa **Agno Team** com 3 componentes:
+
+| Componente | Nome | Funcao |
+|------------|------|--------|
+| **Orquestrador** | `copywriter_master` | Team que recebe o usuario, pesquisa conteudo e delega |
+| **Agente Reels** | `reels_copywriter` | Cria roteiros de video curto (30-60s) clonando estilo |
+| **Agente Stories** | `stories_copywriter` | Cria sequencias de Stories interativos (Leandro Ladeira) |
+
+**Modo**: `TeamMode.coordinate` — o orquestrador analisa o pedido e delega ao(s) especialista(s) adequado(s).
+
+**Fluxo**:
+1. Usuario envia tema → orquestrador pesquisa base
+2. Usuario escolhe creator → orquestrador pergunta formato (Reels/Stories/Pacote)
+3. Orquestrador delega ao(s) especialista(s)
+4. Especialista(s) gera(m) conteudo no estilo do creator
+5. Orquestrador entrega o resultado
+
 ## Arquivos principais
 
 | Arquivo | Funcao |
 |---------|--------|
-| `agent.py` | Configuracao do agente (model, tools, knowledge, storage, AgentOS) |
-| `prompt.md` | Instrucoes do agente (comportamento, fluxo, regras de clonagem) |
+| `agent.py` | Team + agentes (orquestrador, reels, stories), AgentOS, endpoints |
+| `prompt.md` | Instrucoes do agente Reels (clonagem de estilo, fluxo, regras) |
+| `stories_prompt.md` | Instrucoes do agente Stories (metodo Leandro Ladeira) |
 | `transcribe.py` | Transcreve MP4 com Whisper → salva JSON → sobe pro ChromaDB |
 | `ingest.py` | Ingere PDFs com metadados (pasta + classificacao LLM) → ChromaDB |
 | `youtube_ingest.py` | Baixa transcricoes do YouTube → classifica → ChromaDB |
@@ -35,9 +55,13 @@ Agente de IA que CLONA o estilo de criadores de conteudo (creators) para gerar r
 ```
 CopyWriter/
 ├── agent.py
-├── prompt.md
+├── prompt.md                # Prompt do agente Reels
+├── stories_prompt.md        # Prompt do agente Stories
 ├── transcribe.py
 ├── ingest.py
+├── youtube_ingest.py
+├── profiles.py
+├── youtube_urls.txt
 ├── .env
 ├── pyproject.toml
 ├── videos/                  # MP4s dos creators (cada subpasta = 1 creator)
@@ -67,96 +91,65 @@ uv run agent.py
 cd agent-ui && npm run dev
 ```
 
-## Fluxo do agente
-
-1. Usuario chega → agente pergunta o assunto
-2. Usuario envia tema → agente pesquisa base (ChromaDB) + Tavily
-3. Agente apresenta relatorio com pontos encontrados
-4. Agente lista os creators disponiveis para o usuario escolher
-5. Usuario escolhe → agente gera 10 hooks no estilo clonado
-6. Usuario aprova → agente gera roteiro completo
-
-Se o usuario envia TEXTO PRONTO (em vez de tema), o agente pula direto para perguntar o creator e reescreve o texto clonando o estilo.
-
 ## Conceitos-chave
 
-- **Clonagem de estilo**: O agente analisa 10 pontos (tom, energia, linguajar, bordoes, ritmo, analogias, emocao, hooks, CTA, estrutura) para replicar o creator
-- **Perfis de creators**: DNA de estilo persistente — gerado uma vez, reutilizado em toda interacao. Contem exemplos reais e regras praticas para clonar (tipo="perfil")
+- **Clonagem de estilo**: Os agentes analisam 10 pontos (tom, energia, linguajar, bordoes, ritmo, analogias, emocao, hooks, CTA, estrutura) para replicar o creator
+- **Perfis de creators**: DNA de estilo persistente — gerado uma vez, reutilizado em toda interacao (tipo="perfil")
 - **Metadados por tipo**: `tipo="transcricao"` (estilo), `tipo="apostila"` (conteudo), `tipo="youtube"` (conteudo web), `tipo="perfil"` (DNA de clonagem)
-- **Startup automatico**: Ao rodar `uv run agent.py`, transcreve videos + ingere PDFs + ingere YouTube + gera perfis antes de servir (tudo incremental)
+- **Team coordinate**: Orquestrador decide quais agentes ativar, sintetiza respostas
+- **Stories Leandro Ladeira**: Caixinhas de perguntas, enquetes, quizzes, interacao a cada 3 stories, sequencias de 7-12 stories
+- **Startup automatico**: Ao rodar `uv run agent.py`, transcreve videos + ingere PDFs + ingere YouTube + gera perfis em background
 - **Memoria persistente**: O agente memoriza correcoes do usuario ("ele nao fala assim") e melhora a clonagem ao longo do tempo
 
-## Parametros do Agent (tuning)
+## Parametros do Team/Agent (tuning)
 
-- `model="gpt-5-mini"` — modelo GPT-5 mini (melhor qualidade criativa, custo similar ao 4.1-mini)
-- `reasoning_effort="medium"` — equilibrio entre velocidade e qualidade de raciocinio
-- `verbosity="medium"` — equilibrado (high despejava informacao demais)
+- `model="gpt-5-mini"` — modelo GPT-5 mini para todos os componentes
+- `reasoning_effort="medium"` — equilibrio entre velocidade e qualidade
+- `verbosity="low"` — respostas curtas e diretas
+- `TeamMode.coordinate` — orquestrador delega seletivamente
 - `stream=True` — resposta em tempo real
 - `markdown=True` — formatacao na UI
 - `num_history_runs=5` — ultimas 5 conversas como contexto
 - `update_memory_on_run=True` — salva memorias automaticamente
 - `search_knowledge=True` — busca no ChromaDB via tool
-- `enable_agentic_knowledge_filters=True` — filtros dinamicos por tipo, autor, etc.
+- `enable_agentic_knowledge_filters=True` — filtros por tipo, autor, etc.
 - `tool_call_limit=10` — previne loops infinitos
 - `add_datetime_to_context=True` — agente sabe a data atual
 
 ## Convencoes
 
-- Prompt fica em `prompt.md` separado do codigo (facilita edicao)
+- Prompts ficam em arquivos `.md` separados do codigo
 - Lista de creators e injetada dinamicamente das pastas em `videos/`
 - Transcricoes salvam em JSON (com metadados), nao TXT puro
 - Toda ingestao usa `skip_if_exists=True` (incremental)
 - Tavily e condicional — so ativa se a API key existir no .env
+- Team usa `AgentOS(teams=[team])` em vez de `agents=[agent]`
 
 ## Conexao e Deploy
 
 - **Local**: AgentOS sobe em `0.0.0.0:7777` com reload
 - **AgentUI**: `http://localhost:3000` (frontend Next.js)
-- **CORS**: liberado para localhost (local) e `["*"]` para deploy
+- **CORS**: liberado para `["*"]`
 - **Render**: plano Starter com disco persistente em `/data` (1GB), 2 workers uvicorn
 - **Disco persistente**: ChromaDB e SQLite salvam em `RENDER_DISK_PATH=/data` (sobrevive deploys)
-- **Health check**: `GET /health` — Render monitora automaticamente
-- **Startup inteligente**: so re-ingere dados se ChromaDB estiver vazio (deploy rapido)
-- **API principal**: `POST /agents/copywriter_master/runs` (message, stream, session_id)
+- **Health check**: `GET /health`
+- **API principal**: `POST /teams/copywriter_master/runs` (message, stream, session_id)
 - **GitHub**: https://github.com/rodrigodebrito/copywriter
 
 ## Proximos Passos
 
-### Fase 1 — Agente de Stories (multi-agente)
-Criar um segundo agente especializado em **Stories com caixinha de perguntas/interacao**, complementando o Reels:
-- **Agente Reels** (atual): gera roteiros de video curto
-- **Agente Stories**: gera sequencia de stories com caixinhas, enquetes, perguntas, CTAs interativos — tudo conectado ao tema do Reels
-- **Orquestrador (Team)**: usar o modo Team do Agno para coordenar os agentes — usuario pede conteudo, o orquestrador distribui para Reels + Stories automaticamente
-- O usuario pede UM tema e recebe o pacote completo (roteiro + stories)
+### Fase 1 — Agente de Stories (multi-agente) ✅ CONCLUIDO
+- Agente Reels + Agente Stories + Orquestrador Team
+- Metodo Leandro Ladeira para Stories
 
 ### Fase 2 — Base de conhecimento Leandro Ladeira
-Ingerir o curso/conteudo do Leandro Ladeira no RAG como fonte de conhecimento de copywriting:
-- Adicionar PDFs/transcricoes na pasta `apostilas/` com metadados apropriados
-- O agente passa a usar as tecnicas do Ladeira como base para gerar copies mais persuasivas
-- Complementa o conteudo tecnico das apostilas existentes
+Ingerir o curso/conteudo do Leandro Ladeira no RAG como fonte de conhecimento de copywriting
 
 ### Fase 3 — Multi-plataforma automatico
-Um tema gera conteudo adaptado para TODAS as plataformas de uma vez:
-- Reels/TikTok (roteiro curto 30-60s)
-- YouTube (roteiro longo 5-10min)
-- Carrossel Instagram (slides com copy)
-- Caption/Legenda (texto persuasivo)
-- Stories (sequencia de cards com interacao)
-- Twitter/X (thread)
-- Cada formato tem seu agente especializado no Team
+Um tema gera conteudo para TODAS as plataformas (Reels, YouTube, Carrossel, Caption, Stories, Twitter)
 
 ### Fase 4 — Calendario editorial
-"Me gera o conteudo da semana" → o orquestrador cria um calendario completo:
-- Distribui temas pelos dias da semana
-- Gera conteudo para cada plataforma
-- Tudo no estilo do creator escolhido
-- Exporta em formato organizado
+"Me gera o conteudo da semana" → calendario completo distribuido por dias
 
 ### Fase 5 — Evolucao tecnica
-- **PostgreSQL**: migrar de SQLite para Postgres no Render (escala)
-- **Autenticacao**: JWT ou API key para proteger a API em producao
-- **ChromaDB Cloud**: migrar de local para cloud (mais robusto)
-- **Detector de tendencias**: Tavily puxa trending topics e sugere conteudos
-- **Mais videos por creator**: expandir a base para perfis mais precisos
-
-
+- PostgreSQL, Autenticacao JWT, ChromaDB Cloud, Detector de tendencias

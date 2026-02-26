@@ -1,11 +1,12 @@
 # ============================================================
-# agent.py — CopyWriter Agent
+# agent.py — CopyWriter Team (Orquestrador + Reels + Stories)
 # ============================================================
 
 from pathlib import Path
 import os
 
 from agno.agent import Agent
+from agno.team import Team, TeamMode
 from agno.models.openai import OpenAIChat
 from agno.db.sqlite import SqliteDb
 from agno.knowledge import Knowledge
@@ -62,7 +63,6 @@ knowledge_base = Knowledge(
 # ============================================================
 # AUTORES DISPONIVEIS — Lista dinamica baseada nas pastas
 # ============================================================
-# Descobre quais autores existem na pasta videos/
 autores_disponiveis = []
 if VIDEOS_DIR.exists():
     autores_disponiveis = [p.name for p in VIDEOS_DIR.iterdir() if p.is_dir()]
@@ -70,15 +70,22 @@ if VIDEOS_DIR.exists():
 lista_autores = ", ".join(autores_disponiveis) if autores_disponiveis else "Nenhum autor cadastrado ainda"
 
 # ============================================================
-# INSTRUCTIONS — Carrega o prompt do arquivo prompt.md
+# INSTRUCTIONS — Carrega os prompts dos arquivos separados
 # ============================================================
-# O prompt fica em arquivo separado para facilitar edicao
-# sem precisar mexer no codigo Python.
 PROMPT_FILE = BASE_DIR / "prompt.md"
-prompt_base = PROMPT_FILE.read_text(encoding="utf-8")
+STORIES_PROMPT_FILE = BASE_DIR / "stories_prompt.md"
 
-# Injeta a lista de creators dinamicamente no final do prompt
-INSTRUCTIONS = f"""{prompt_base}
+prompt_reels = PROMPT_FILE.read_text(encoding="utf-8")
+prompt_stories = STORIES_PROMPT_FILE.read_text(encoding="utf-8")
+
+# Injeta a lista de creators dinamicamente
+REELS_INSTRUCTIONS = f"""{prompt_reels}
+
+## CREATORS DISPONIVEIS
+{lista_autores}
+"""
+
+STORIES_INSTRUCTIONS = f"""{prompt_stories}
 
 ## CREATORS DISPONIVEIS
 {lista_autores}
@@ -95,65 +102,181 @@ else:
     print("AVISO: TAVILY_API_KEY nao configurada — busca na internet desativada")
 
 # ============================================================
-# AGENT — Configuracao otimizada
+# MODELO — Configuracao compartilhada
 # ============================================================
-agent = Agent(
-    # --- Identidade ---
-    name="copywriter_master",
-    description="CopyWriter Master — Cria roteiros e copies no estilo de creators especificos",
-    instructions=INSTRUCTIONS,
-
-    # --- Modelo ---
-    model=OpenAIChat(
+def get_model():
+    return OpenAIChat(
         id="gpt-5-mini",
         api_key=os.getenv("OPENAI_API_KEY"),
-        reasoning_effort="medium",   # equilibrio entre velocidade e qualidade
-        verbosity="low",             # respostas curtas e diretas (medium ainda era verboso)
-    ),
-    # --- Streaming ---
-    # Envia a resposta em tempo real para o AgentUI (sem travar esperando)
-    stream=True,
+        reasoning_effort="medium",
+        verbosity="low",
+    )
 
-    # --- Formatacao ---
-    # Formata a resposta em Markdown para exibicao no AgentUI
+# ============================================================
+# AGENTE 1 — REELS (Roteiros de video curto)
+# ============================================================
+reels_agent = Agent(
+    name="reels_copywriter",
+    role="Especialista em roteiros de Reels/Shorts",
+    description=(
+        "Cria roteiros de video curto (30-60s) no estilo EXATO de creators especificos. "
+        "Domina hook, desenvolvimento e CTA. Clona tom de voz, girias, energia e ritmo."
+    ),
+    instructions=REELS_INSTRUCTIONS,
+    model=get_model(),
+    knowledge=knowledge_base,
+    search_knowledge=True,
+    add_search_knowledge_instructions=True,
+    enable_agentic_knowledge_filters=True,
+    tools=tools if tools else None,
+    tool_call_limit=10,
+    markdown=True,
+    add_datetime_to_context=True,
+)
+
+# ============================================================
+# AGENTE 2 — STORIES (Sequencias interativas)
+# ============================================================
+stories_agent = Agent(
+    name="stories_copywriter",
+    role="Especialista em Stories interativos (metodo Leandro Ladeira)",
+    description=(
+        "Cria sequencias de 7-12 Instagram Stories com caixinhas de perguntas, "
+        "enquetes, quizzes e interacao. Gera engajamento massivo usando o "
+        "metodo Leandro Ladeira adaptado ao estilo do creator."
+    ),
+    instructions=STORIES_INSTRUCTIONS,
+    model=get_model(),
+    knowledge=knowledge_base,
+    search_knowledge=True,
+    add_search_knowledge_instructions=True,
+    enable_agentic_knowledge_filters=True,
+    tools=tools if tools else None,
+    tool_call_limit=10,
+    markdown=True,
+    add_datetime_to_context=True,
+)
+
+# ============================================================
+# ORQUESTRADOR — Team que coordena Reels + Stories
+# ============================================================
+ORCHESTRATOR_INSTRUCTIONS = f"""Voce e o CopyWriter Master, um orquestrador de conteudo.
+Voce coordena dois especialistas para entregar conteudo completo.
+
+## SEUS ESPECIALISTAS
+
+1. **reels_copywriter** — Cria roteiros de Reels/Shorts (video curto 30-60s)
+2. **stories_copywriter** — Cria sequencias de Stories interativos (7-12 stories com caixinhas, enquetes, etc.)
+
+## FLUXO DE ATENDIMENTO
+
+### PASSO 1 — ENTENDER A NECESSIDADE
+Quando o usuario chegar:
+- Apresente-se como CopyWriter Master
+- Pergunte: **"Sobre qual assunto voce quer criar conteudo?"**
+- NAO pergunte o creator ainda
+
+### PASSO 2 — DETECTAR O TIPO DE INPUT
+- **Texto pronto**: usuario enviou texto para reescrever → pergunte o creator → delegue ao reels_copywriter
+- **Tema/assunto**: usuario enviou um tema → pesquise na base e apresente o relatorio
+
+### PASSO 3 — PESQUISAR E APRESENTAR
+Ao receber um tema:
+1. Pesquise na base de conhecimento (apostilas + YouTube)
+2. Apresente com NO MAXIMO 10-15 linhas no formato:
+
+---
+Encontrei material sobre [tema]. Principais pontos:
+- [ponto 1]
+- [ponto 2]
+- [ponto 3]
+
+Angulos possiveis:
+- [angulo 1]
+- [angulo 2]
+
+Qual creator voce quer que eu clone?
+- **Nome** — estilo em 5 palavras
+---
+
+### PASSO 4 — DELEGAR AO REELS (SEMPRE PRIMEIRO)
+Apos o usuario escolher o creator:
+- Delegue IMEDIATAMENTE ao reels_copywriter (hooks + roteiro)
+- O Reels e SEMPRE o primeiro passo — o Stories depende dele
+- Passe: tema, creator, conteudo encontrado na pesquisa
+
+### PASSO 5 — AGUARDAR APROVACAO DO REELS
+Apos entregar o roteiro do Reels, aguarde o usuario:
+- Aprovar o roteiro → va para PASSO 6
+- Pedir ajustes → delegue novamente ao reels_copywriter com as correcoes
+
+### PASSO 6 — OFERECER LEGENDA + HASHTAGS
+Quando o usuario aprovar o Reels, pergunte:
+**"Quer que eu crie a legenda e hashtags pra esse Reels?"**
+- Se SIM → delegue ao reels_copywriter pedindo legenda + hashtags baseados no roteiro aprovado
+- Se NAO → va para PASSO 7
+
+### PASSO 7 — OFERECER STORIES
+Apos a legenda (ou se o usuario pulou), pergunte:
+**"Quer que eu crie uma sequencia de Stories pra acompanhar esse Reels?"**
+- Se SIM → delegue ao stories_copywriter com o tema, creator E o roteiro aprovado do Reels
+- Se NAO → encerre
+
+O stories_copywriter recebe o roteiro do Reels para criar Stories que COMPLEMENTAM o video,
+gerando antecipacao antes ou engajamento depois da publicacao.
+
+## REGRAS DO ORQUESTRADOR
+
+- NUNCA gere conteudo voce mesmo — SEMPRE delegue aos especialistas
+- NUNCA pule etapas do fluxo
+- SEMPRE gere Reels primeiro, Stories depois (e so se o usuario quiser)
+- Seja CONCISO nas suas interacoes diretas com o usuario
+- NAO explique o que vai fazer, apenas FACA
+- NAO peca permissao para pesquisar — pesquise IMEDIATAMENTE
+- Cada etapa do fluxo e UMA mensagem curta
+- Quando delegar, passe TODAS as informacoes necessarias (tema, creator, pontos do conteudo, roteiro aprovado)
+
+## CREATORS DISPONIVEIS
+{lista_autores}
+"""
+
+team = Team(
+    name="copywriter_master",
+    description="CopyWriter Master — Cria roteiros (Reels) e sequencias de Stories no estilo de creators",
+    members=[reels_agent, stories_agent],
+    mode=TeamMode.coordinate,
+    model=get_model(),
+    instructions=ORCHESTRATOR_INSTRUCTIONS,
+
+    # --- Streaming ---
+    stream=True,
     markdown=True,
 
-    # --- Historico de conversas ---
-    # Envia as ultimas 5 conversas como contexto (10 era demais, gastava tokens)
+    # --- Historico ---
     db=storage,
     add_history_to_context=True,
     num_history_runs=5,
 
-    # --- Memoria persistente ---
-    # Salva e recupera memorias do usuario entre sessoes
-    # (ex: preferencias, nomes, contextos recorrentes)
-    update_memory_on_run=True,       # novo parametro (substitui enable_user_memories)
-    add_memories_to_context=True,    # injeta memorias no prompt automaticamente
+    # --- Memoria ---
+    update_memory_on_run=True,
+    add_memories_to_context=True,
 
-    # --- Knowledge Base (RAG) ---
-    # Busca automatica no ChromaDB antes de responder
+    # --- Knowledge (orquestrador tambem pesquisa) ---
     knowledge=knowledge_base,
-    search_knowledge=True,           # adiciona tool de busca no knowledge
-    add_search_knowledge_instructions=True,  # instrui o modelo a buscar
-    enable_agentic_knowledge_filters=True,   # agente pode filtrar por autor, tipo, etc.
+    search_knowledge=True,
+    enable_agentic_knowledge_filters=True,
 
-    # --- Tools ---
-    tools=tools if tools else None,
-    tool_call_limit=10,              # previne loops infinitos de tool calls
-
-    # --- Contexto extra ---
-    add_datetime_to_context=True,    # agente sabe a data/hora atual
+    # --- Contexto ---
+    add_datetime_to_context=True,
 )
 
 # ============================================================
 # AGENT OS — Servidor web + API
 # ============================================================
-# CORS aberto para permitir chamadas de n8n, Loveable, etc.
-# Em producao, restrinja para dominios especificos.
 agent_os = AgentOS(
     id="copywriter",
-    description="CopyWriter Master — Agente de roteiros e copies",
-    agents=[agent],
+    description="CopyWriter Master — Conteudo completo (Reels + Stories)",
+    teams=[team],
     cors_allowed_origins=["*"],
 )
 
@@ -204,6 +327,8 @@ def health_check():
     return {
         "status": "ok",
         "model": "gpt-5-mini",
+        "mode": "team",
+        "agents": ["reels_copywriter", "stories_copywriter"],
         "creators": len(autores_disponiveis),
         "disk": "persistent" if RENDER_DISK else "local",
     }
@@ -212,9 +337,6 @@ def health_check():
 # ============================================================
 # STARTUP — Sincroniza dados em background (nao bloqueia a porta)
 # ============================================================
-# A ingestao roda em uma thread separada DEPOIS que o servidor
-# ja abriu a porta. Isso evita o "No open ports detected" do Render.
-
 import json as _json
 import threading
 from contextlib import asynccontextmanager
@@ -304,7 +426,3 @@ def ingerir_tudo():
 if __name__ == "__main__":
     ingerir_tudo()
     agent_os.serve(app="agent:app", host="0.0.0.0", port=7777, reload=True)
-
-
-
-
