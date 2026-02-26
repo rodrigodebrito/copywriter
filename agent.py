@@ -244,7 +244,15 @@ async def lifespan(application):
                     )
             print(f"  [transcricoes] {autor}: OK")
 
-    # 2) YouTube — baixa transcricoes das URLs e ingere
+    # 2) Apostilas (PDFs)
+    try:
+        from ingest import ingerir_apostilas
+        ingerir_apostilas()
+        print(f"  [apostilas]: OK")
+    except Exception as e:
+        print(f"  [apostilas]: ERRO - {e}")
+
+    # 3) YouTube — baixa transcricoes das URLs e ingere
     try:
         from youtube_ingest import main as ingerir_youtube
         ingerir_youtube()
@@ -252,7 +260,7 @@ async def lifespan(application):
     except Exception as e:
         print(f"  [youtube]: ERRO - {e}")
 
-    # 3) Perfis de creators — gera a partir das transcricoes
+    # 4) Perfis de creators — gera a partir das transcricoes
     try:
         from profiles import main as gerar_perfis
         gerar_perfis()
