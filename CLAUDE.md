@@ -113,7 +113,10 @@ Se o usuario envia TEXTO PRONTO (em vez de tema), o agente pula direto para perg
 - **Local**: AgentOS sobe em `0.0.0.0:7777` com reload
 - **AgentUI**: `http://localhost:3000` (frontend Next.js)
 - **CORS**: liberado para localhost (local) e `["*"]` para deploy
-- **Render**: `render.yaml` configurado com persistent disk em `/data`
+- **Render**: plano Starter com disco persistente em `/data` (1GB), 2 workers uvicorn
+- **Disco persistente**: ChromaDB e SQLite salvam em `RENDER_DISK_PATH=/data` (sobrevive deploys)
+- **Health check**: `GET /health` — Render monitora automaticamente
+- **Startup inteligente**: so re-ingere dados se ChromaDB estiver vazio (deploy rapido)
 - **API principal**: `POST /agents/copywriter_master/runs` (message, stream, session_id)
 - **GitHub**: https://github.com/rodrigodebrito/copywriter
 

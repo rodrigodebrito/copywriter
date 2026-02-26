@@ -2,9 +2,14 @@ services:
   - type: web
     name: copywriter-agent
     runtime: python
-    plan: free
+    plan: starter
     buildCommand: pip install uv && uv sync
-    startCommand: uv run uvicorn agent:app --host 0.0.0.0 --port $PORT
+    startCommand: uv run uvicorn agent:app --host 0.0.0.0 --port $PORT --workers 2
+    healthCheckPath: /health
+    disk:
+      name: copywriter-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: OPENAI_API_KEY
         sync: false  # Configurar manualmente no dashboard
@@ -12,3 +17,5 @@ services:
         sync: false
       - key: PYTHON_VERSION
         value: "3.13"
+      - key: RENDER_DISK_PATH
+        value: /data
