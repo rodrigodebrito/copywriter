@@ -18,6 +18,8 @@
 # ============================================================
 
 import json
+import subprocess
+import tempfile
 from pathlib import Path
 
 from openai import OpenAI
@@ -28,22 +30,63 @@ from agent import knowledge_base, VIDEOS_DIR, DB_DIR
 load_dotenv()
 
 
+def _extrair_audio(caminho_video: Path) -> Path:
+    """
+    Extrai o audio de um video MP4 para MP3 comprimido usando ffmpeg.
+    Retorna o caminho do arquivo MP3 temporario.
+    Um video de 100MB vira ~3-5MB de audio.
+    """
+    audio_path = Path(tempfile.mktemp(suffix=".mp3"))
+    subprocess.run(
+        [
+            "ffmpeg", "-i", str(caminho_video),
+            "-vn",              # sem video
+            "-acodec", "libmp3lame",
+            "-ab", "64k",       # bitrate baixo (suficiente pra voz)
+            "-ar", "16000",     # sample rate 16kHz (ideal pro Whisper)
+            "-ac", "1",         # mono
+            "-y",               # sobrescreve se existir
+            str(audio_path),
+        ],
+        capture_output=True,
+        check=True,
+    )
+    return audio_path
+
+
 def transcrever_video(caminho_video: Path) -> str:
     """
     Transcreve um arquivo de video usando Whisper da OpenAI.
-    Aceita MP4 direto (ate 25MB).
+    Se o arquivo for maior que 24MB, extrai o audio primeiro com ffmpeg.
     """
     client = OpenAI()
+    tamanho_mb = caminho_video.stat().st_size / (1024 * 1024)
+
+    arquivo_enviar = caminho_video
+    audio_temp = None
+
+    if tamanho_mb > 24:
+        print(f"  Arquivo grande ({tamanho_mb:.1f}MB) — extraindo audio...")
+        try:
+            audio_temp = _extrair_audio(caminho_video)
+            tamanho_audio = audio_temp.stat().st_size / (1024 * 1024)
+            print(f"  Audio extraido: {tamanho_audio:.1f}MB")
+            arquivo_enviar = audio_temp
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            print(f"  AVISO: ffmpeg nao disponivel ({e}), enviando MP4 direto...")
 
     print(f"  Transcrevendo com Whisper...")
-    with open(caminho_video, "rb") as video_file:
-        transcription = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=video_file,
-            language="pt",
-        )
-
-    return transcription.text
+    try:
+        with open(arquivo_enviar, "rb") as f:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f,
+                language="pt",
+            )
+        return transcription.text
+    finally:
+        if audio_temp and audio_temp.exists():
+            audio_temp.unlink()
 
 
 def salvar_transcricao(texto: str, autor: str, nome_arquivo: str):
@@ -191,12 +234,6 @@ def main():
 
             # Nenhuma transcricao existe — transcrever
             print(f"[{i}/{len(videos)}] {nome}")
-
-            # Verifica tamanho (Whisper aceita ate 25MB)
-            tamanho_mb = video_path.stat().st_size / (1024 * 1024)
-            if tamanho_mb > 25:
-                print(f"  AVISO: Arquivo muito grande ({tamanho_mb:.1f}MB > 25MB), pulando")
-                continue
 
             try:
                 texto = transcrever_video(video_path)
