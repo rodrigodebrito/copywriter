@@ -21,8 +21,7 @@ videos/**/*.mp3
 videos/**/*.wav
 videos/**/*.txt
 
-# Apostilas (PDFs locais)
-apostilas/
+# Apostilas — PDFs commitados (necessarios no Render para ingestao)
 
 # YouTube JSONs ficam em data/ (ja ignorado acima)
 
