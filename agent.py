@@ -108,7 +108,7 @@ agent = Agent(
         id="gpt-5-mini",
         api_key=os.getenv("OPENAI_API_KEY"),
         reasoning_effort="medium",   # equilibrio entre velocidade e qualidade
-        verbosity="high",            # respostas detalhadas (roteiros longos)
+        verbosity="medium",          # equilibrado (high despejava informacao demais)
     ),
     # --- Streaming ---
     # Envia a resposta em tempo real para o AgentUI (sem travar esperando)
