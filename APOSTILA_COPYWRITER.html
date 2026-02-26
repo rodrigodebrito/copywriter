@@ -448,7 +448,11 @@
     <a href="#cap16"><span class="chapter-num">16</span>Prompt Engineering</a>
     <a href="#cap17"><span class="chapter-num">17</span>Streaming e Tuning</a>
     <a href="#cap18"><span class="chapter-num">18</span>Fluxo Completo</a>
-    <a href="#glossario"><span class="chapter-num">19</span>Glossario</a>
+    <a href="#cap19"><span class="chapter-num">19</span>Team Mode (Multi-Agente)</a>
+    <a href="#cap20"><span class="chapter-num">20</span>Stories (Leandro Ladeira)</a>
+    <a href="#cap21"><span class="chapter-num">21</span>YouTube Ingest</a>
+    <a href="#cap22"><span class="chapter-num">22</span>Perfis de Creators</a>
+    <a href="#glossario"><span class="chapter-num">23</span>Glossario</a>
 </nav>
 
 <!-- MAIN -->
@@ -524,16 +528,22 @@ Responde</div>
 
         <pre><code><span class="highlight">CopyWriter/</span>
 │
-├── <span class="fn">agent.py</span>              <span class="cm">← Configuracao do agente (componentes)</span>
-├── <span class="fn">ingest.py</span>             <span class="cm">← Ingestao de documentos (metadados + embeddings)</span>
-├── <span class="fn">main.py</span>               <span class="cm">← Ponto de entrada do programa</span>
+├── <span class="fn">agent.py</span>              <span class="cm">← Team + agentes (orquestrador, reels, stories)</span>
+├── <span class="fn">prompt.md</span>             <span class="cm">← Instrucoes do agente Reels (clonagem de estilo)</span>
+├── <span class="fn">stories_prompt.md</span>     <span class="cm">← Instrucoes do agente Stories (Leandro Ladeira)</span>
+├── <span class="fn">ingest.py</span>             <span class="cm">← Ingestao de PDFs (metadados + embeddings)</span>
+├── <span class="fn">transcribe.py</span>         <span class="cm">← Transcreve MP4 com Whisper → JSON → ChromaDB</span>
+├── <span class="fn">youtube_ingest.py</span>     <span class="cm">← Baixa transcricoes do YouTube → ChromaDB</span>
+├── <span class="fn">profiles.py</span>           <span class="cm">← Gera perfis de estilo (DNA) dos creators</span>
+├── <span class="fn">youtube_urls.txt</span>      <span class="cm">← URLs do YouTube para ingerir</span>
 ├── <span class="var">.env</span>                  <span class="cm">← Chaves de API (NUNCA compartilhe!)</span>
 ├── <span class="fn">pyproject.toml</span>        <span class="cm">← Lista de dependencias</span>
-├── <span class="fn">uv.lock</span>               <span class="cm">← Versoes exatas (gerado automaticamente)</span>
 │
 ├── <span class="highlight">data/</span>                 <span class="cm">← Criada automaticamente pelo codigo</span>
 │   ├── agent.db          <span class="cm">← Banco SQLite (historico de conversas)</span>
-│   └── chromadb/         <span class="cm">← Banco vetorial (embeddings)</span>
+│   ├── chromadb/         <span class="cm">← Banco vetorial (embeddings)</span>
+│   ├── profiles/         <span class="cm">← Perfis de estilo dos creators (JSON)</span>
+│   └── youtube/          <span class="cm">← Transcricoes do YouTube (JSON)</span>
 │
 ├── <span class="highlight">apostilas/</span>            <span class="cm">← PDFs organizados por categoria</span>
 │   ├── <span class="highlight">terapia/</span>
@@ -1530,46 +1540,56 @@ print(response.content)</code></pre>
 
         <h3>Ao receber uma mensagem do usuario</h3>
         <ol>
-            <li><strong>Passo 1</strong> — Entende a necessidade (saudacao → pergunta o assunto)</li>
-            <li><strong>Passo 2</strong> — Detecta automaticamente se e texto pronto ou tema</li>
-            <li><strong>Passo 3A</strong> — Texto pronto: pergunta o creator, clona e reescreve</li>
-            <li><strong>Passo 3B</strong> — Tema: pesquisa base + Tavily → relatorio → lista creators → 10 hooks → roteiro</li>
+            <li><strong>Passo 1</strong> — Orquestrador entende a necessidade (pergunta o assunto)</li>
+            <li><strong>Passo 2</strong> — Detecta se e texto pronto ou tema</li>
+            <li><strong>Passo 3</strong> — Pesquisa na base + apresenta relatorio com creators</li>
+            <li><strong>Passo 4</strong> — Usuario escolhe creator → delega ao <strong>Reels</strong> (hooks + roteiro)</li>
+            <li><strong>Passo 5</strong> — Usuario aprova → oferece <strong>legenda + hashtags</strong></li>
+            <li><strong>Passo 6</strong> — Oferece <strong>Stories</strong> para complementar o Reels</li>
         </ol>
 
-        <h3>Arquitetura dos arquivos</h3>
-        <span class="code-label">Estrutura</span>
-        <pre><code>CopyWriter/
-├── agent.py          <span class="cm"># Configuracao do agente (parametros, tools, knowledge)</span>
-├── prompt.md         <span class="cm"># Cerebro do agente (instrucoes de comportamento)</span>
-├── transcribe.py     <span class="cm"># Transcreve videos com Whisper → JSON → ChromaDB</span>
-├── ingest.py         <span class="cm"># Ingere PDFs com metadados (pasta + LLM) → ChromaDB</span>
-├── .env              <span class="cm"># Chaves de API (OpenAI, Tavily)</span>
-├── pyproject.toml    <span class="cm"># Dependencias do projeto</span>
-├── videos/           <span class="cm"># Pasta dos creators (MP4 + JSON)</span>
-│   ├── Fernando Freitas/
-│   ├── Luiza Freitas/
-│   └── Thamires Hauch/
-├── apostilas/        <span class="cm"># PDFs organizados por categoria</span>
-│   └── terapia/constelacao/
-└── data/             <span class="cm"># Dados persistentes</span>
-    ├── agent.db      <span class="cm"># SQLite (historico + memorias)</span>
-    └── chromadb/     <span class="cm"># Banco vetorial (embeddings)</span></code></pre>
+        <h3>Arquitetura Multi-Agente</h3>
+        <span class="code-label">Team Mode</span>
+        <pre><code>
+           ┌─────────────────────────────┐
+           │   <span class="highlight">ORQUESTRADOR (Team)</span>        │
+           │   copywriter_master         │
+           │   - Recebe o usuario        │
+           │   - Pesquisa conteudo       │
+           │   - Delega aos agentes      │
+           └──────────┬──────────────────┘
+                      │
+            ┌─────────┼─────────┐
+            ▼                   ▼
+  ┌──────────────────┐ ┌──────────────────┐
+  │ <span class="fn">REELS</span>            │ │ <span class="fn">STORIES</span>          │
+  │ reels_copywriter │ │ stories_copywriter│
+  │ - Roteiros 30-60s│ │ - 7-12 stories   │
+  │ - Hooks + CTA    │ │ - Caixinhas      │
+  │ - Legenda + tags │ │ - Enquetes       │
+  │ - Clona estilo   │ │ - Metodo Ladeira │
+  └──────────────────┘ └──────────────────┘
+</code></pre>
 
         <h3>Fluxo de dados</h3>
         <span class="code-label">Diagrama</span>
         <pre><code>MP4 → Whisper → JSON → ChromaDB (transcricoes/estilo)
 PDF → pypdf → LLM classifica → ChromaDB (apostilas/conteudo)
+YouTube → youtube-transcript-api → ChromaDB (youtube/conteudo)
+Perfis → GPT analisa transcricoes → ChromaDB (perfil/DNA de estilo)
 Internet → Tavily → Conteudo atualizado
 
 Usuario faz pergunta
     ↓
-Agente busca no ChromaDB (RAG)
+Orquestrador pesquisa ChromaDB (RAG)
     ↓
-Complementa com Tavily se necessario
+Apresenta relatorio + lista creators
     ↓
-Clona estilo do creator (10 pontos)
+Delega ao agente Reels (roteiro)
     ↓
-Gera roteiro no estilo clonado</code></pre>
+Usuario aprova → legenda + hashtags
+    ↓
+Delega ao agente Stories (complementa o Reels)</code></pre>
 
         <h3>Para adicionar um novo creator</h3>
         <ol>
@@ -1580,10 +1600,250 @@ Gera roteiro no estilo clonado</code></pre>
         </ol>
     </div>
 
+    <!-- CAP 19 — TEAM MODE -->
+    <div class="chapter" id="cap19">
+        <div class="chapter-header">
+            <div class="chapter-number">19</div>
+            <h2>Team Mode (Multi-Agente)</h2>
+        </div>
+
+        <p>Ate agora, tinhamos <strong>um unico agente</strong> que fazia tudo: pesquisar, clonar estilo e gerar roteiros. Com o <strong>Team Mode</strong> do Agno, dividimos o trabalho entre agentes especializados.</p>
+
+        <h3>O que e um Team?</h3>
+        <p>Um <strong>Team</strong> e um grupo de agentes coordenados por um <strong>orquestrador</strong>. O orquestrador decide qual agente usar para cada tarefa. Pense assim:</p>
+
+        <div class="comparison">
+            <div class="card bad">
+                <h4>Antes (agente unico)</h4>
+                <div class="diagram">Usuario → Agente faz TUDO
+<span class="cm">(pesquisa + clona + gera roteiro)</span></div>
+            </div>
+            <div class="card good">
+                <h4>Agora (Team)</h4>
+                <div class="diagram">Usuario → Orquestrador
+  <span class="arrow">|</span>
+  Pesquisa conteudo
+  <span class="arrow">|</span>
+  Qual formato?
+  <span class="arrow">/          \</span>
+<span class="label">Reels</span>      <span class="label">Stories</span>
+ <span class="arrow">|</span>            <span class="arrow">|</span>
+Agente       Agente
+especialista especialista</div>
+            </div>
+        </div>
+
+        <h3>Os 3 componentes</h3>
+        <table>
+            <thead>
+                <tr><th>Componente</th><th>Nome</th><th>Funcao</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Orquestrador</strong></td><td>copywriter_master</td><td>Recebe o usuario, pesquisa conteudo, delega</td></tr>
+                <tr><td><strong>Agente Reels</strong></td><td>reels_copywriter</td><td>Roteiros de video curto + legenda + hashtags</td></tr>
+                <tr><td><strong>Agente Stories</strong></td><td>stories_copywriter</td><td>Sequencias de Stories interativos</td></tr>
+            </tbody>
+        </table>
+
+        <h3>TeamMode.coordinate</h3>
+        <p>Usamos o modo <strong>coordinate</strong> — o orquestrador analisa a tarefa e decide <strong>qual agente(s)</strong> usar. Ele NAO gera conteudo diretamente, apenas coordena.</p>
+
+        <span class="code-label">agent.py — Criando o Team</span>
+        <pre><code><span class="kw">from</span> agno.team <span class="kw">import</span> Team, TeamMode
+
+team = Team(
+    name=<span class="str">"copywriter_master"</span>,
+    members=[reels_agent, stories_agent],
+    mode=TeamMode.coordinate,   <span class="cm"># orquestrador decide quem usar</span>
+    model=get_model(),
+    instructions=ORCHESTRATOR_INSTRUCTIONS,
+    knowledge=knowledge_base,
+    search_knowledge=<span class="kw">True</span>,
+    db=storage,
+)
+
+<span class="cm"># Servir via AgentOS (teams= em vez de agents=)</span>
+agent_os = AgentOS(
+    teams=[team],   <span class="cm">← Agora passa o Team, nao um Agent</span>
+)</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">API mudou!</div>
+            <p>A rota da API muda de <code>/agents/copywriter_master/runs</code> para <code>/teams/copywriter_master/runs</code>. Se voce tem um frontend, atualize a URL.</p>
+        </div>
+
+        <h3>Modos disponiveis do Team</h3>
+        <table>
+            <thead>
+                <tr><th>Modo</th><th>Comportamento</th><th>Quando usar</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>coordinate</strong></td><td>Orquestrador escolhe qual agente usar</td><td>Roteamento inteligente (nosso caso)</td></tr>
+                <tr><td><strong>route</strong></td><td>Passa direto para o agente, sem processar</td><td>Roteamento simples</td></tr>
+                <tr><td><strong>broadcast</strong></td><td>Envia para TODOS os agentes</td><td>Multiplas perspectivas</td></tr>
+                <tr><td><strong>tasks</strong></td><td>Decompoem em tarefas autonomamente</td><td>Workflows complexos</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CAP 20 — STORIES -->
+    <div class="chapter" id="cap20">
+        <div class="chapter-header">
+            <div class="chapter-number">20</div>
+            <h2>Agente de Stories (Leandro Ladeira)</h2>
+        </div>
+
+        <p>O agente de Stories cria sequencias de <strong>7 a 12 Instagram Stories</strong> usando o metodo do <strong>Leandro Ladeira</strong>. A diferenca entre Reels e Stories:</p>
+
+        <div class="comparison">
+            <div class="card">
+                <h4>Reels</h4>
+                <div class="diagram">Video de 30-60 segundos
+Hook → Desenvolvimento → CTA
+<span class="cm">O seguidor ASSISTE</span></div>
+            </div>
+            <div class="card good">
+                <h4>Stories</h4>
+                <div class="diagram">Sequencia de 7-12 cards
+Caixinhas → Enquetes → Quiz
+<span class="cm">O seguidor INTERAGE</span></div>
+            </div>
+        </div>
+
+        <h3>Estrutura base de uma sequencia</h3>
+        <table>
+            <thead>
+                <tr><th>Story</th><th>Tipo</th><th>Objetivo</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Caixinha de perguntas</td><td>Gerar respostas e curiosidade</td></tr>
+                <tr><td>2</td><td>Filtro de respostas</td><td>Mostrar respostas + gerar FOMO</td></tr>
+                <tr><td>3</td><td>Enquete binaria</td><td>Polarizar e engajar (1 toque)</td></tr>
+                <tr><td>4-5</td><td>Conteudo</td><td>Entregar valor em doses pequenas</td></tr>
+                <tr><td>6</td><td>Quiz / V ou F</td><td>Gamificar e manter ativo</td></tr>
+                <tr><td>7-8</td><td>Historia / depoimento</td><td>Conexao emocional</td></tr>
+                <tr><td>9</td><td>Provocacao final</td><td>Frase de impacto (printavel)</td></tr>
+                <tr><td>10</td><td>CTA</td><td>Direcionar para acao</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Regras de ouro</h3>
+        <ul>
+            <li><strong>1 story = 1 ideia</strong> — Nunca 2 ideias no mesmo story</li>
+            <li><strong>Texto curto</strong> — Maximo 3 linhas por story de texto</li>
+            <li><strong>Interacao a cada 3 stories</strong> — Nunca 3+ stories seguidos sem pedir interacao</li>
+            <li><strong>Sem introducao</strong> — NUNCA "Oi gente, hoje vou falar sobre..."</li>
+            <li><strong>Complementa o Reels</strong> — Stories NAO repete, EXPANDE com interacao</li>
+        </ul>
+
+        <h3>Fluxo: Reels primeiro, Stories depois</h3>
+        <p>O Stories so e criado <strong>depois</strong> que o usuario aprova o Reels. Isso porque os Stories complementam o video — eles precisam saber o conteudo aprovado.</p>
+
+        <span class="code-label">Fluxo</span>
+        <pre><code>1. Tema → Pesquisa → Relatorio
+2. Creator → Delega ao <span class="fn">Reels</span> (hooks + roteiro)
+3. Usuario aprova roteiro
+4. Oferece <span class="fn">legenda + hashtags</span> (mesmo agente Reels)
+5. Oferece <span class="fn">Stories</span> para complementar
+6. Stories recebe o roteiro aprovado como referencia</code></pre>
+    </div>
+
+    <!-- CAP 21 — YOUTUBE INGEST -->
+    <div class="chapter" id="cap21">
+        <div class="chapter-header">
+            <div class="chapter-number">21</div>
+            <h2>Ingestao do YouTube (youtube_ingest.py)</h2>
+        </div>
+
+        <p>Alem das apostilas (PDFs) e transcricoes de video (Whisper), o sistema tambem ingere <strong>transcricoes de videos do YouTube</strong> como fonte de conteudo.</p>
+
+        <h3>Como funciona</h3>
+        <ol>
+            <li>Voce coloca URLs no arquivo <code>youtube_urls.txt</code> (uma por linha)</li>
+            <li>O script <code>youtube_ingest.py</code> baixa as legendas do video (sem precisar de API key)</li>
+            <li>Classifica o conteudo com GPT-4o-mini (tema + palavras-chave)</li>
+            <li>Salva o JSON em <code>data/youtube/</code></li>
+            <li>Ingere no ChromaDB com <code>tipo="youtube"</code></li>
+        </ol>
+
+        <span class="code-label">youtube_urls.txt</span>
+        <pre><code><span class="cm"># Videos sobre programacao mental</span>
+https://www.youtube.com/watch?v=exemplo1
+https://youtu.be/exemplo2
+
+<span class="cm"># Videos sobre autoestima</span>
+https://www.youtube.com/watch?v=exemplo3</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Diferenca: YouTube vs Transcricoes de creators</div>
+            <p>Videos do YouTube (<code>tipo="youtube"</code>) sao fonte de <strong>conteudo</strong> (o que falar). Transcricoes dos creators (<code>tipo="transcricao"</code>) sao fonte de <strong>estilo</strong> (como falar). Nunca misture!</p>
+        </div>
+
+        <h3>Tipos de conteudo no ChromaDB</h3>
+        <table>
+            <thead>
+                <tr><th>Tipo</th><th>Fonte</th><th>Uso</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>apostila</code></td><td>PDFs em apostilas/</td><td>Conteudo tecnico</td></tr>
+                <tr><td><code>youtube</code></td><td>Videos do YouTube</td><td>Conteudo complementar</td></tr>
+                <tr><td><code>transcricao</code></td><td>Videos dos creators</td><td>Estilo (tom, girias, ritmo)</td></tr>
+                <tr><td><code>perfil</code></td><td>Gerado pelo profiles.py</td><td>DNA completo de clonagem</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CAP 22 — PERFIS -->
+    <div class="chapter" id="cap22">
+        <div class="chapter-header">
+            <div class="chapter-number">22</div>
+            <h2>Perfis de Creators (profiles.py)</h2>
+        </div>
+
+        <p>O <code>profiles.py</code> analisa TODAS as transcricoes de um creator e gera um <strong>perfil de clonagem</strong> — o "DNA de estilo" completo.</p>
+
+        <h3>Os 10 pontos de clonagem</h3>
+        <ol>
+            <li><strong>Tom de voz</strong> — Autoritario? Amigo? Provocativo?</li>
+            <li><strong>Energia</strong> — Urgencia? Calma? Raiva controlada?</li>
+            <li><strong>Linguajar</strong> — Girias? Palavroes? Formal?</li>
+            <li><strong>Bordoes</strong> — Frases que ele repete sempre</li>
+            <li><strong>Estrutura</strong> — Como constroi argumentos</li>
+            <li><strong>Ritmo</strong> — Frases curtas ou longas?</li>
+            <li><strong>Analogias</strong> — Que tipo de comparacoes usa</li>
+            <li><strong>Emocao</strong> — Qual sentimento quer provocar</li>
+            <li><strong>Hooks</strong> — Como abre os videos</li>
+            <li><strong>CTA</strong> — Como encerra e convida a acao</li>
+        </ol>
+
+        <p>Cada ponto inclui <strong>exemplos reais</strong> das transcricoes e <strong>regras praticas</strong> de como replicar.</p>
+
+        <h3>Como funciona</h3>
+        <span class="code-label">Fluxo do profiles.py</span>
+        <pre><code>Para cada creator em videos/:
+  1. Coleta TODAS as transcricoes (JSONs)
+  2. Envia para GPT-4.1-mini com prompt de analise
+  3. Recebe JSON com os 10 pontos + exemplos + regras
+  4. Salva em data/profiles/Nome.json
+  5. Converte para texto e ingere no ChromaDB (tipo="perfil")
+</code></pre>
+
+        <div class="info-box tip">
+            <div class="title">Perfil e gerado uma vez</div>
+            <p>O perfil so e gerado na primeira vez. Nas proximas execucoes, apenas garante que esta no ChromaDB. Use <code>python profiles.py --force</code> para regenerar.</p>
+        </div>
+
+        <h3>Regra de ouro da clonagem</h3>
+        <div class="info-box warning">
+            <div class="title">Teste final</div>
+            <p>Se voce tirar o nome do creator e alguem ler o texto, essa pessoa tem que reconhecer de quem e o estilo. Se nao reconhecer, o agente falhou.</p>
+        </div>
+    </div>
+
     <!-- GLOSSARIO -->
     <div class="chapter" id="glossario">
         <div class="chapter-header">
-            <div class="chapter-number">19</div>
+            <div class="chapter-number">23</div>
             <h2>Glossario</h2>
         </div>
 
@@ -1622,6 +1882,12 @@ Gera roteiro no estilo clonado</code></pre>
                 <tr><td><strong>CTA</strong></td><td>Call To Action — chamada para acao no final do conteudo</td></tr>
                 <tr><td><strong>Clonagem de estilo</strong></td><td>Processo de analisar e replicar o tom, energia e linguajar de um creator</td></tr>
                 <tr><td><strong>Creator</strong></td><td>Criador de conteudo cujo estilo sera clonado pelo agente</td></tr>
+                <tr><td><strong>Team</strong></td><td>Grupo de agentes coordenados por um orquestrador (Agno Team Mode)</td></tr>
+                <tr><td><strong>Orquestrador</strong></td><td>Agente lider do Team que decide qual especialista usar para cada tarefa</td></tr>
+                <tr><td><strong>TeamMode.coordinate</strong></td><td>Modo onde o orquestrador analisa e delega seletivamente aos membros</td></tr>
+                <tr><td><strong>Perfil de creator</strong></td><td>DNA de estilo completo (10 pontos com exemplos reais) salvo como tipo="perfil"</td></tr>
+                <tr><td><strong>Stories</strong></td><td>Sequencia de 7-12 cards interativos no Instagram (caixinhas, enquetes, quizzes)</td></tr>
+                <tr><td><strong>Caixinha de perguntas</strong></td><td>Elemento interativo dos Stories onde seguidores enviam respostas</td></tr>
             </tbody>
         </table>
     </div>
@@ -1638,19 +1904,25 @@ Gera roteiro no estilo clonado</code></pre>
         <ul>
             <li>&#10003; Transcricao automatica de videos com Whisper</li>
             <li>&#10003; Prompt de clonagem com 10 pontos de analise</li>
-            <li>&#10003; Fluxo de atendimento em funil (saudacao → tema → creator → hooks → roteiro)</li>
+            <li>&#10003; Fluxo de atendimento em funil (tema → creator → hooks → roteiro)</li>
             <li>&#10003; Streaming em tempo real</li>
             <li>&#10003; Memoria persistente com aprendizado continuo</li>
-            <li>&#10003; Recomendacao inteligente de creator por tema</li>
-            <li>&#10003; Ingestao automatica no startup</li>
+            <li>&#10003; Ingestao de YouTube (transcricoes automaticas)</li>
+            <li>&#10003; Perfis de creators (DNA de estilo persistente)</li>
+            <li>&#10003; Team Mode com orquestrador (Reels + Stories)</li>
+            <li>&#10003; Agente de Stories (metodo Leandro Ladeira)</li>
+            <li>&#10003; Legenda + hashtags apos aprovacao do roteiro</li>
+            <li>&#10003; Deploy no Render com disco persistente</li>
+            <li>&#10003; Ingestao automatica em background no startup</li>
         </ul>
 
         <h3>Melhorias futuras</h3>
         <ol>
-            <li><strong>Mais videos por creator</strong> — Quanto mais transcricoes, melhor a clonagem</li>
-            <li><strong>Apostilas especializadas</strong> — Material do nicho dos creators (nao generico)</li>
-            <li><strong>Interface frontend customizada</strong> — Alem do AgentUI padrao</li>
-            <li><strong>Suporte a videos longos</strong> — Dividir videos &gt;25MB automaticamente</li>
+            <li><strong>Base Leandro Ladeira</strong> — Ingerir curso de copywriting como fonte de conhecimento</li>
+            <li><strong>Multi-plataforma</strong> — Um tema gera conteudo para Reels, YouTube, Carrossel, Twitter</li>
+            <li><strong>Calendario editorial</strong> — "Me gera o conteudo da semana" com distribuicao por dias</li>
+            <li><strong>PostgreSQL</strong> — Migrar de SQLite para escalar</li>
+            <li><strong>Autenticacao</strong> — JWT ou API key para proteger a API em producao</li>
         </ol>
     </div>
 
