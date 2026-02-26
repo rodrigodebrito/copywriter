@@ -358,12 +358,19 @@ app.build_middleware_stack()
 @app.get("/health")
 def health_check():
     """Endpoint de health check para o Render."""
+    # Conta documentos no ChromaDB por tipo
+    try:
+        col = vector_db._collection
+        total = col.count() if col else 0
+    except Exception:
+        total = "erro"
     return {
         "status": "ok",
         "model": "gpt-5",
         "mode": "team",
         "agents": ["reels_copywriter", "stories_copywriter"],
         "creators": len(autores_disponiveis),
+        "chromadb_docs": total,
         "disk": "persistent" if RENDER_DISK else "local",
     }
 
