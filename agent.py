@@ -210,68 +210,57 @@ def health_check():
 
 
 # ============================================================
-# STARTUP — Re-ingere dados no ChromaDB apenas se necessario
+# STARTUP — Sempre sincroniza dados (incremental com skip_if_exists)
 # ============================================================
-# Com disco persistente, o ChromaDB ja tem os dados entre deploys.
-# O startup so re-ingere se o banco estiver vazio (primeiro deploy
-# ou se o disco foi limpo).
+# Roda toda vez no startup mas e rapido: skip_if_exists=True faz
+# com que docs ja existentes sejam pulados instantaneamente.
+# Assim, creators novos sao ingeridos automaticamente no deploy.
 
 import json as _json
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(application):
-    """Popula o ChromaDB no startup apenas se estiver vazio."""
-    # Verifica se o ChromaDB ja tem dados
+    """Sincroniza o ChromaDB no startup (incremental)."""
+    print("\n=== STARTUP: Sincronizando ChromaDB ===\n")
+
+    # 1) Transcricoes dos creators (JSONs em videos/*/)
+    if VIDEOS_DIR.exists():
+        for autor_dir in sorted(p for p in VIDEOS_DIR.iterdir() if p.is_dir()):
+            autor = autor_dir.name
+            for json_path in sorted(autor_dir.glob("*.json")):
+                dados = _json.loads(json_path.read_text(encoding="utf-8"))
+                texto = dados.get("transcricao", "")
+                if texto.strip():
+                    knowledge_base.add_content(
+                        text_content=texto,
+                        name=f"{autor} - {json_path.stem}",
+                        metadata={
+                            "tipo": "transcricao",
+                            "autor": autor,
+                            "arquivo": json_path.name,
+                        },
+                        skip_if_exists=True,
+                    )
+            print(f"  [transcricoes] {autor}: OK")
+
+    # 2) YouTube — baixa transcricoes das URLs e ingere
     try:
-        collection = vector_db._client.get_collection("copywriter")
-        total_docs = collection.count()
-    except Exception:
-        total_docs = 0
+        from youtube_ingest import main as ingerir_youtube
+        ingerir_youtube()
+        print(f"  [youtube]: OK")
+    except Exception as e:
+        print(f"  [youtube]: ERRO - {e}")
 
-    if total_docs > 0:
-        print(f"\n=== STARTUP: ChromaDB ja populado ({total_docs} docs) — pulando ingestao ===\n")
-    else:
-        print("\n=== STARTUP: ChromaDB vazio — populando ===\n")
+    # 3) Perfis de creators — gera a partir das transcricoes
+    try:
+        from profiles import main as gerar_perfis
+        gerar_perfis()
+        print(f"  [perfis]: OK")
+    except Exception as e:
+        print(f"  [perfis]: ERRO - {e}")
 
-        # 1) Transcricoes dos creators (JSONs em videos/*/)
-        if VIDEOS_DIR.exists():
-            for autor_dir in sorted(p for p in VIDEOS_DIR.iterdir() if p.is_dir()):
-                autor = autor_dir.name
-                for json_path in sorted(autor_dir.glob("*.json")):
-                    dados = _json.loads(json_path.read_text(encoding="utf-8"))
-                    texto = dados.get("transcricao", "")
-                    if texto.strip():
-                        knowledge_base.add_content(
-                            text_content=texto,
-                            name=f"{autor} - {json_path.stem}",
-                            metadata={
-                                "tipo": "transcricao",
-                                "autor": autor,
-                                "arquivo": json_path.name,
-                            },
-                            skip_if_exists=True,
-                        )
-                print(f"  [transcricoes] {autor}: OK")
-
-        # 2) YouTube — baixa transcricoes das URLs e ingere
-        try:
-            from youtube_ingest import main as ingerir_youtube
-            ingerir_youtube()
-            print(f"  [youtube]: OK")
-        except Exception as e:
-            print(f"  [youtube]: ERRO - {e}")
-
-        # 3) Perfis de creators — gera a partir das transcricoes
-        try:
-            from profiles import main as gerar_perfis
-            gerar_perfis()
-            print(f"  [perfis]: OK")
-        except Exception as e:
-            print(f"  [perfis]: ERRO - {e}")
-
-        print("\n=== STARTUP: ChromaDB pronto ===\n")
-
+    print("\n=== STARTUP: ChromaDB pronto ===\n")
     yield
 
 app.router.lifespan_context = lifespan
