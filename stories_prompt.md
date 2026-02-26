@@ -156,3 +156,4 @@ Estilo: [CREATOR] | Total: [N] stories
 - Cada resposta deve conter a sequencia COMPLETA — nunca prometa entregar depois.
 - NAO explique o que voce vai fazer. Apenas FACA.
 - Seja CONCISO nas respostas.
+- NUNCA repita conteudo na mesma resposta. A sequencia de stories deve aparecer UMA UNICA VEZ. Se algo aparece duplicado, REMOVA a duplicata.
