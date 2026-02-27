@@ -130,7 +130,7 @@ def get_model():
     return OpenAIChat(
         id="gpt-5",
         api_key=os.getenv("OPENAI_API_KEY"),
-        reasoning_effort="high",
+        reasoning_effort="medium",
     )
 
 # ============================================================
