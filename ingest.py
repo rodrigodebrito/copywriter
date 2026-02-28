@@ -170,70 +170,101 @@ def extrair_texto_pdf(caminho_pdf: Path) -> str:
 # INGERIR APOSTILAS — Percorre a pasta e processa cada PDF
 # ============================================================
 
-def ingerir_apostilas():
-    """
-    Percorre todos os PDFs em apostilas/ (incluindo subpastas),
-    extrai metadados (pastas + LLM) e adiciona ao knowledge base.
+def _ingerir_pdf(pdf_path: Path, i: int, total: int):
+    """Ingere um PDF no knowledge base."""
+    nome = pdf_path.name
+    print(f"[{i}/{total}] Processando PDF: {nome}")
 
-    Fluxo para cada PDF:
-    1. Extrai categoria/subcategoria do caminho da pasta
-    2. Extrai texto do PDF
-    3. Envia trecho para o LLM classificar (tema, autor, palavras-chave)
-    4. Combina todos os metadados
-    5. Adiciona ao knowledge base (ChromaDB)
-    """
-    # rglob("*.pdf") busca PDFs recursivamente em todas as subpastas
-    pdfs = list(APOSTILAS_DIR.rglob("*.pdf"))
+    metadata_pasta = extrair_metadata_pasta(pdf_path)
+    print(f"  Pasta -> {metadata_pasta}")
 
-    if not pdfs:
-        print("Nenhum PDF encontrado em apostilas/")
-        print(f"Coloque seus PDFs em: {APOSTILAS_DIR}")
+    texto = extrair_texto_pdf(pdf_path)
+
+    if not texto.strip():
+        print(f"  AVISO: PDF sem texto extraivel (pode ser escaneado)")
+        metadata_llm = {"tema": "nao identificado", "autor": "desconhecido", "palavras_chave": []}
+    else:
+        print(f"  Classificando com LLM...")
+        metadata_llm = classificar_documento(texto)
+        print(f"  LLM -> tema: {metadata_llm.get('tema')}, autor: {metadata_llm.get('autor')}")
+
+    metadata_final = {
+        "tipo": "apostila",
+        **metadata_pasta,
+        "tema": metadata_llm.get("tema", ""),
+        "autor": metadata_llm.get("autor", "desconhecido"),
+        "palavras_chave": ", ".join(metadata_llm.get("palavras_chave", [])),
+        "arquivo": nome,
+    }
+
+    print(f"  Adicionando ao ChromaDB...")
+    knowledge_base.add_content(
+        path=str(pdf_path),
+        reader=PDFReader(chunking_strategy=SemanticChunking()),
+        metadata=metadata_final,
+        skip_if_exists=True,
+    )
+    print(f"  OK!\n")
+
+
+def _ingerir_txt(txt_path: Path, i: int, total: int):
+    """Ingere um TXT no knowledge base."""
+    nome = txt_path.name
+    print(f"[{i}/{total}] Processando TXT: {nome}")
+
+    metadata_pasta = extrair_metadata_pasta(txt_path)
+    print(f"  Pasta -> {metadata_pasta}")
+
+    texto = txt_path.read_text(encoding="utf-8")
+
+    if not texto.strip():
+        print(f"  AVISO: TXT vazio — pulando")
         return
 
-    print(f"Encontrados {len(pdfs)} PDFs para processar\n")
+    print(f"  Classificando com LLM...")
+    metadata_llm = classificar_documento(texto)
+    print(f"  LLM -> tema: {metadata_llm.get('tema')}, autor: {metadata_llm.get('autor')}")
 
-    for i, pdf_path in enumerate(pdfs, 1):
-        nome = pdf_path.name
-        print(f"[{i}/{len(pdfs)}] Processando: {nome}")
+    metadata_final = {
+        "tipo": "apostila",
+        **metadata_pasta,
+        "tema": metadata_llm.get("tema", ""),
+        "autor": metadata_llm.get("autor", "desconhecido"),
+        "palavras_chave": ", ".join(metadata_llm.get("palavras_chave", [])),
+        "arquivo": nome,
+    }
 
-        # 1. Metadados da estrutura de pastas
-        metadata_pasta = extrair_metadata_pasta(pdf_path)
-        print(f"  Pasta -> {metadata_pasta}")
+    print(f"  Adicionando ao ChromaDB...")
+    knowledge_base.add_content(
+        text_content=texto,
+        name=f"apostila-{txt_path.stem}",
+        metadata=metadata_final,
+        skip_if_exists=True,
+    )
+    print(f"  OK!\n")
 
-        # 2. Extrair texto para classificacao
-        texto = extrair_texto_pdf(pdf_path)
 
-        if not texto.strip():
-            print(f"  AVISO: PDF sem texto extraivel (pode ser escaneado)")
-            metadata_llm = {"tema": "nao identificado", "autor": "desconhecido", "palavras_chave": []}
+def ingerir_apostilas():
+    """
+    Percorre todos os PDFs e TXTs em apostilas/ (incluindo subpastas),
+    extrai metadados (pastas + LLM) e adiciona ao knowledge base.
+    """
+    pdfs = list(APOSTILAS_DIR.rglob("*.pdf"))
+    txts = list(APOSTILAS_DIR.rglob("*.txt"))
+    arquivos = pdfs + txts
+
+    if not arquivos:
+        print("Nenhum PDF ou TXT encontrado em apostilas/")
+        print(f"Coloque seus arquivos em: {APOSTILAS_DIR}")
+        return
+
+    print(f"Encontrados {len(pdfs)} PDFs e {len(txts)} TXTs para processar\n")
+
+    for i, path in enumerate(arquivos, 1):
+        if path.suffix.lower() == ".pdf":
+            _ingerir_pdf(path, i, len(arquivos))
         else:
-            # 3. Classificacao via LLM
-            print(f"  Classificando com LLM...")
-            metadata_llm = classificar_documento(texto)
-            print(f"  LLM -> tema: {metadata_llm.get('tema')}, autor: {metadata_llm.get('autor')}")
-
-        # 4. Combinar metadados (pasta + LLM)
-        metadata_final = {
-            "tipo": "apostila",
-            **metadata_pasta,                      # categoria, subcategoria
-            "tema": metadata_llm.get("tema", ""),
-            "autor": metadata_llm.get("autor", "desconhecido"),
-            "palavras_chave": ", ".join(metadata_llm.get("palavras_chave", [])),
-            "arquivo": nome,
-        }
-
-        print(f"  Metadata final: {metadata_final}")
-
-        # 5. Adicionar ao knowledge base
-        print(f"  Adicionando ao ChromaDB...")
-        knowledge_base.add_content(
-            path=str(pdf_path),
-            reader=PDFReader(chunking_strategy=SemanticChunking()),
-            metadata=metadata_final,
-            skip_if_exists=True,
-        )
-
-        print(f"  OK!\n")
+            _ingerir_txt(path, i, len(arquivos))
 
     print("Ingestao de apostilas concluida!")
 
