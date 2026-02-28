@@ -13,6 +13,7 @@ from agno.knowledge import Knowledge
 from agno.knowledge.chunking.semantic import SemanticChunking
 from agno.knowledge.embedder.openai import OpenAIEmbedder
 from agno.knowledge.reader.pdf_reader import PDFReader
+from agno.memory.manager import MemoryManager
 from agno.tools.tavily import TavilyTools
 from agno.vectordb.chroma import ChromaDb
 from agno.os import AgentOS
@@ -287,7 +288,7 @@ team = Team(
     # --- Memoria ---
     update_memory_on_run=True,
     add_memories_to_context=True,
-    memory_model=get_fast_model(),  # Modelo rapido pra memoria (nao precisa de GPT-5)
+    memory_manager=MemoryManager(model=get_fast_model()),  # Modelo rapido pra memoria
 
     # --- Knowledge (SO o orquestrador pesquisa — membros recebem o conteudo via delegacao) ---
     knowledge=knowledge_base,
