@@ -145,14 +145,7 @@ reels_agent = Agent(
     ),
     instructions=REELS_INSTRUCTIONS,
     model=get_model(),
-    knowledge=knowledge_base,
-    search_knowledge=True,
-    add_search_knowledge_instructions=True,
-    enable_agentic_knowledge_filters=True,
-    tools=tools if tools else None,
-    tool_call_limit=10,
     markdown=True,
-    add_datetime_to_context=True,
 )
 
 # ============================================================
@@ -168,14 +161,7 @@ stories_agent = Agent(
     ),
     instructions=STORIES_INSTRUCTIONS,
     model=get_model(),
-    knowledge=knowledge_base,
-    search_knowledge=True,
-    add_search_knowledge_instructions=True,
-    enable_agentic_knowledge_filters=True,
-    tools=tools if tools else None,
-    tool_call_limit=10,
     markdown=True,
-    add_datetime_to_context=True,
 )
 
 # ============================================================
@@ -289,19 +275,21 @@ team = Team(
     # --- Historico ---
     db=storage,
     add_history_to_context=True,
-    num_history_runs=5,
+    num_history_runs=3,
 
     # --- Memoria ---
     update_memory_on_run=True,
     add_memories_to_context=True,
 
-    # --- Knowledge (orquestrador tambem pesquisa) ---
+    # --- Knowledge (SO o orquestrador pesquisa — membros recebem o conteudo via delegacao) ---
     knowledge=knowledge_base,
     search_knowledge=True,
-    enable_agentic_knowledge_filters=True,
+    enable_agentic_knowledge_filters=False,  # Desliga filtros agenticos (1 tool call a menos)
+    tools=tools if tools else None,
 
     # --- Contexto ---
     add_datetime_to_context=True,
+    tool_call_limit=8,
 )
 
 # ============================================================
