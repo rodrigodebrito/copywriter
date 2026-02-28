@@ -130,7 +130,14 @@ def get_model():
     return OpenAIChat(
         id="gpt-5",
         api_key=os.getenv("OPENAI_API_KEY"),
-        reasoning_effort="medium",
+        reasoning_effort="low",
+    )
+
+def get_fast_model():
+    """Modelo rapido para tarefas internas (memoria, classificacao)."""
+    return OpenAIChat(
+        id="gpt-4.1-mini",
+        api_key=os.getenv("OPENAI_API_KEY"),
     )
 
 # ============================================================
@@ -280,6 +287,7 @@ team = Team(
     # --- Memoria ---
     update_memory_on_run=True,
     add_memories_to_context=True,
+    memory_model=get_fast_model(),  # Modelo rapido pra memoria (nao precisa de GPT-5)
 
     # --- Knowledge (SO o orquestrador pesquisa — membros recebem o conteudo via delegacao) ---
     knowledge=knowledge_base,
