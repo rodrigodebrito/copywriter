@@ -358,10 +358,11 @@ app.build_middleware_stack()
 @app.get("/health")
 def health_check():
     """Endpoint de health check para o Render."""
-    # Conta documentos no ChromaDB por tipo
+    # Conta documentos no ChromaDB
     try:
-        col = vector_db._collection
-        total = col.count() if col else 0
+        import chromadb
+        _client = chromadb.PersistentClient(path=str(DB_DIR / "chromadb"))
+        total = sum(c.count() for c in _client.list_collections())
     except Exception:
         total = "erro"
     return {
